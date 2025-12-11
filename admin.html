@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drop Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f3f4f6; }
+        .sidebar { width: 250px; height: 100vh; background: #1E3A8A; color: white; position: fixed; left: 0; top: 0; }
+        .content { margin-left: 250px; padding: 20px; }
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        
+        .nav-item { padding: 15px 20px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 10px; }
+        .nav-item:hover, .nav-item.active { background: #1E40AF; border-left: 4px solid #FBBF24; }
+        
+        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .status-pendente { background: #FEF3C7; color: #D97706; }
+        .status-aprovado { background: #D1FAE5; color: #059669; }
+        
+        @media (max-width: 768px) {
+            .sidebar { width: 60px; }
+            .sidebar span { display: none; }
+            .content { margin-left: 60px; }
+            .nav-item { justify-content: center; }
+            .nav-item i { font-size: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <div class="p-6 font-bold text-xl border-b border-blue-800 mb-4 flex items-center gap-2">
+            <i class="fas fa-cube text-yellow-400"></i> <span>ADMIN</span>
+        </div>
+        <div class="nav-item active" onclick="nav('dash', this)"><i class="fas fa-chart-line"></i> <span>Dashboard</span></div>
+        <div class="nav-item" onclick="nav('motoboys', this); carregarMotoboys()"><i class="fas fa-motorcycle"></i> <span>Motoboys</span></div>
+        <div class="nav-item" onclick="nav('pedidos', this); carregarPedidos()"><i class="fas fa-list"></i> <span>Pedidos</span></div>
+        <div class="nav-item mt-10" onclick="logout()"><i class="fas fa-sign-out-alt"></i> <span>Sair</span></div>
+    </div>
+
+    <!-- LOGIN OVERLAY -->
+    <div id="login-overlay" class="fixed inset-0 bg-gray-900 flex items-center justify-center z-50">
+        <div class="bg-white p-8 rounded-xl w-96 text-center shadow-2xl">
+            <h2 class="text-2xl font-bold mb-4 text-gray-800">Acesso Restrito</h2>
+            <input type="email" id="adm-email" class="w-full border p-3 rounded mb-3" placeholder="E-mail Admin">
+            <input type="password" id="adm-senha" class="w-full border p-3 rounded mb-4" placeholder="Senha">
+            <button onclick="loginAdmin()" class="w-full bg-blue-800 text-white font-bold py-3 rounded hover:bg-blue-900">ENTRAR</button>
+        </div>
+    </div>
+
+    <!-- CONTEÚDO -->
+    <div class="content">
+        
+        <!-- DASHBOARD -->
+        <div id="screen-dash">
+            <h1 class="text-2xl font-bold text-gray-800 mb-6">Visão Geral</h1>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="card border-l-4 border-blue-500">
+                    <p class="text-gray-500 text-sm">Faturamento Total</p>
+                    <h2 class="text-3xl font-bold text-gray-800" id="dash-fat">R$ 0,00</h2>
+                </div>
+                <div class="card border-l-4 border-green-500">
+                    <p class="text-gray-500 text-sm">Corridas Realizadas</p>
+                    <h2 class="text-3xl font-bold text-gray-800" id="dash-corridas">0</h2>
+                </div>
+                <div class="card border-l-4 border-yellow-500">
+                    <p class="text-gray-500 text-sm">Motoboys Pendentes</p>
+                    <h2 class="text-3xl font-bold text-gray-800" id="dash-pendentes">0</h2>
+                </div>
+            </div>
+        </div>
+
+        <!-- MOTOBOYS -->
+        <div id="screen-motoboys" class="hidden">
+            <h1 class="text-2xl font-bold text-gray-800 mb-6">Gestão de Motoboys</h1>
+            <div class="bg-white rounded-lg shadow overflow-hidden">
+                <table class="min-w-full">
+                    <thead class="bg-gray-100 border-b">
+                        <tr>
+                            <th class="p-4 text-left text-xs font-bold text-gray-500">NOME</th>
+                            <th class="p-4 text-left text-xs font-bold text-gray-500">WHATSAPP</th>
+                            <th class="p-4 text-left text-xs font-bold text-gray-500">PLACA</th>
+                            <th class="p-4 text-left text-xs font-bold text-gray-500">STATUS</th>
+                            <th class="p-4 text-left text-xs font-bold text-gray-500">AÇÃO</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lista-motos"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- PEDIDOS -->
+        <div id="screen-pedidos" class="hidden">
+            <h1 class="text-2xl font-bold text-gray-800 mb-6">Todos os Pedidos</h1>
+            <div class="space-y-3" id="lista-pedidos-admin"></div>
+        </div>
+
+    </div>
+
+    <script>
+        // CONFIGURAÇÃO SUPABASE
+        const SUPABASE_URL = 'https://ofpnnijkhgsjarixoyhg.supabase.co'.trim();
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJvZnBubmlqa2hnc2phcml4b3loZyIsImJvbGUiOiJhbm9uIiwiaWF0IjoxNzY1MDY1Mjc2LCJleHAiOjIwODA2NDEyNzZ9.dNOIIETmTz3l1HvhuT-ihAiymJqiaYZnklzzBzDGCFU'.trim();
+        const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // LOGIN
+        window.onload = async () => {
+            const { data: { session } } = await sbClient.auth.getSession();
+            if(session) {
+                // Verifica se é o email do admin (segurança frontend básica)
+                // O banco já bloqueia se não for, mas aqui evitamos carregar a tela
+                if(session.user.email === 'seuemail@admin.com') { // TROQUE PELO SEU EMAIL
+                    document.getElementById('login-overlay').classList.add('hidden');
+                    carregarDash();
+                } else {
+                    alert("Acesso negado. Este usuário não é admin.");
+                    sbClient.auth.signOut();
+                }
+            }
+        }
+
+        async function loginAdmin() {
+            const email = document.getElementById('adm-email').value;
+            const senha = document.getElementById('adm-senha').value;
+            const { error } = await sbClient.auth.signInWithPassword({ email, password: senha });
+            if(error) alert("Erro: " + error.message);
+            else location.reload();
+        }
+
+        function logout() { sbClient.auth.signOut(); location.reload(); }
+
+        // NAVEGAÇÃO
+        function nav(screen, el) {
+            ['dash', 'motoboys', 'pedidos'].forEach(s => document.getElementById('screen-'+s).classList.add('hidden'));
+            document.getElementById('screen-'+screen).classList.remove('hidden');
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            el.classList.add('active');
+        }
+
+        // --- FUNÇÕES DE DADOS ---
+
+        async function carregarDash() {
+            // Conta Pendentes
+            const { count: pendentes } = await sbClient.from('motoboys').select('*', { count: 'exact', head: true }).eq('status', 'Pendente');
+            document.getElementById('dash-pendentes').innerText = pendentes || 0;
+
+            // Conta Corridas
+            const { count: corridas } = await sbClient.from('pedidos').select('*', { count: 'exact', head: true }).eq('status', 'Finalizado');
+            document.getElementById('dash-corridas').innerText = corridas || 0;
+
+            // Soma Faturamento (Exemplo simples, idealmente faria via RPC no banco)
+            const { data } = await sbClient.from('pedidos').select('valor_frete').eq('status', 'Finalizado');
+            const total = data.reduce((acc, cur) => acc + (cur.valor_frete || 0), 0);
+            document.getElementById('dash-fat').innerText = "R$ " + total.toFixed(2);
+        }
+
+        async function carregarMotoboys() {
+            const { data } = await sbClient.from('motoboys').select('*').order('created_at', { ascending: false });
+            const tbody = document.getElementById('lista-motos');
+            tbody.innerHTML = '';
+            
+            data.forEach(m => {
+                const statusClass = m.status === 'Aprovado' ? 'status-aprovado' : 'status-pendente';
+                const btnAcao = m.status === 'Pendente' 
+                    ? `<button onclick="aprovarMotoboy('${m.id}')" class="text-xs bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700">Aprovar</button>` 
+                    : `<button onclick="bloquearMotoboy('${m.id}')" class="text-xs bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700">Bloquear</button>`;
+
+                tbody.innerHTML += `
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="p-4 text-sm font-bold text-gray-800">${m.nome}</td>
+                        <td class="p-4 text-sm text-gray-600">${m.whatsapp}</td>
+                        <td class="p-4 text-sm font-mono">${m.placa}</td>
+                        <td class="p-4"><span class="status-badge ${statusClass}">${m.status}</span></td>
+                        <td class="p-4">${btnAcao}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        async function aprovarMotoboy(id) {
+            if(!confirm("Aprovar este motoboy?")) return;
+            const { error } = await sbClient.from('motoboys').update({ status: 'Aprovado' }).eq('id', id);
+            if(error) alert("Erro"); else carregarMotoboys();
+        }
+        
+        async function bloquearMotoboy(id) {
+            if(!confirm("Bloquear acesso?")) return;
+            const { error } = await sbClient.from('motoboys').update({ status: 'Bloqueado' }).eq('id', id);
+            if(error) alert("Erro"); else carregarMotoboys();
+        }
+
+        async function carregarPedidos() {
+            const list = document.getElementById('lista-pedidos-admin');
+            const { data } = await sbClient.from('pedidos').select('*, profiles(nome_loja)').order('created_at', { ascending: false }).limit(50);
+            
+            list.innerHTML = '';
+            data.forEach(p => {
+                const statusColor = p.status === 'Solicitado' ? 'border-yellow-500' : (p.status === 'Em Rota' ? 'border-blue-500' : 'border-green-500');
+                // Nome da loja vem do JOIN, se falhar usa 'Loja'
+                const nomeLoja = p.profiles?.nome_loja || "Loja";
+
+                list.innerHTML += `
+                    <div class="bg-white p-4 rounded-lg shadow border-l-4 ${statusColor} flex justify-between items-center">
+                        <div>
+                            <p class="font-bold text-gray-800 text-sm">#${p.id} - ${nomeLoja}</p>
+                            <p class="text-xs text-gray-500">${p.origem} ➔ ${p.destino}</p>
+                            <p class="text-xs text-gray-400 mt-1">${new Date(p.created_at).toLocaleString()}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-bold text-blue-600">R$ ${p.valor_frete}</p>
+                            <p class="text-xs font-bold uppercase tracking-wider text-gray-500">${p.status}</p>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+    </script>
+</body>
+</html>
+
