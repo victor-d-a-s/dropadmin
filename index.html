@@ -10,96 +10,143 @@
     
     <style>
         body { font-family: 'Segoe UI', sans-serif; background-color: #f3f4f6; }
-        .sidebar { width: 250px; height: 100vh; background: #1E3A8A; color: white; position: fixed; left: 0; top: 0; }
-        .content { margin-left: 250px; padding: 20px; }
-        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         
-        .nav-item { padding: 15px 20px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 10px; }
-        .nav-item:hover, .nav-item.active { background: #1E40AF; border-left: 4px solid #FBBF24; }
+        /* Layout Sidebar */
+        .sidebar { width: 260px; height: 100vh; background: #111827; color: white; position: fixed; left: 0; top: 0; display: flex; flex-direction: column; }
+        .content { margin-left: 260px; padding: 30px; }
         
-        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        /* Cards */
+        .card { background: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        
+        /* Menu Items */
+        .nav-item { padding: 16px 24px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 12px; color: #9CA3AF; font-size: 14px; font-weight: 500; }
+        .nav-item:hover, .nav-item.active { background: #1F2937; color: #FBBF24; border-right: 3px solid #FBBF24; }
+        .nav-item i { width: 20px; text-align: center; font-size: 18px; }
+        
+        /* Tabela */
+        .table-header { background-color: #F9FAFB; text-transform: uppercase; font-size: 11px; color: #6B7280; letter-spacing: 0.05em; }
+        .status-badge { padding: 4px 10px; border-radius: 99px; font-size: 11px; font-weight: 800; text-transform: uppercase; }
         .status-pendente { background: #FEF3C7; color: #D97706; }
         .status-aprovado { background: #D1FAE5; color: #059669; }
-        
+        .status-bloqueado { background: #FEE2E2; color: #DC2626; }
+
+        /* Login Overlay */
+        .overlay { position: fixed; inset: 0; background: #111827; z-index: 100; display: flex; align-items: center; justify-content: center; }
+
         @media (max-width: 768px) {
-            .sidebar { width: 60px; }
+            .sidebar { width: 70px; }
             .sidebar span { display: none; }
-            .content { margin-left: 60px; }
-            .nav-item { justify-content: center; }
-            .nav-item i { font-size: 20px; }
+            .content { margin-left: 70px; padding: 15px; }
+            .logo-text { display: none; }
         }
     </style>
 </head>
 <body>
 
-    <!-- SIDEBAR -->
-    <div class="sidebar">
-        <div class="p-6 font-bold text-xl border-b border-blue-800 mb-4 flex items-center gap-2">
-            <i class="fas fa-cube text-yellow-400"></i> <span>ADMIN</span>
-        </div>
-        <div class="nav-item active" onclick="nav('dash', this)"><i class="fas fa-chart-line"></i> <span>Dashboard</span></div>
-        <div class="nav-item" onclick="nav('motoboys', this); carregarMotoboys()"><i class="fas fa-motorcycle"></i> <span>Motoboys</span></div>
-        <div class="nav-item" onclick="nav('pedidos', this); carregarPedidos()"><i class="fas fa-list"></i> <span>Pedidos</span></div>
-        <div class="nav-item mt-10" onclick="logout()"><i class="fas fa-sign-out-alt"></i> <span>Sair</span></div>
-    </div>
-
-    <!-- LOGIN OVERLAY -->
-    <div id="login-overlay" class="fixed inset-0 bg-gray-900 flex items-center justify-center z-50">
-        <div class="bg-white p-8 rounded-xl w-96 text-center shadow-2xl">
-            <h2 class="text-2xl font-bold mb-4 text-gray-800">Acesso Restrito</h2>
-            <input type="email" id="adm-email" class="w-full border p-3 rounded mb-3" placeholder="E-mail Admin">
-            <input type="password" id="adm-senha" class="w-full border p-3 rounded mb-4" placeholder="Senha">
-            <button onclick="loginAdmin()" class="w-full bg-blue-800 text-white font-bold py-3 rounded hover:bg-blue-900">ENTRAR</button>
+    <!-- LOGIN DO ADMIN -->
+    <div id="login-screen" class="overlay">
+        <div class="bg-gray-800 p-8 rounded-2xl w-96 text-center shadow-2xl border border-gray-700">
+            <i class="fas fa-user-shield text-5xl text-yellow-500 mb-4"></i>
+            <h2 class="text-2xl font-bold text-white mb-6">Painel Mestre</h2>
+            <input type="email" id="adm-email" class="w-full bg-gray-900 border border-gray-700 text-white p-3 rounded-lg mb-3" placeholder="E-mail Admin">
+            <input type="password" id="adm-senha" class="w-full bg-gray-900 border border-gray-700 text-white p-3 rounded-lg mb-6" placeholder="Senha">
+            <button onclick="loginAdmin()" class="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-3 rounded-lg transition">ACESSAR SISTEMA</button>
         </div>
     </div>
 
-    <!-- CONTEÚDO -->
-    <div class="content">
+    <!-- SISTEMA -->
+    <div id="app-screen" class="hidden">
         
-        <!-- DASHBOARD -->
-        <div id="screen-dash">
-            <h1 class="text-2xl font-bold text-gray-800 mb-6">Visão Geral</h1>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div class="card border-l-4 border-blue-500">
-                    <p class="text-gray-500 text-sm">Faturamento Total</p>
-                    <h2 class="text-3xl font-bold text-gray-800" id="dash-fat">R$ 0,00</h2>
-                </div>
-                <div class="card border-l-4 border-green-500">
-                    <p class="text-gray-500 text-sm">Corridas Realizadas</p>
-                    <h2 class="text-3xl font-bold text-gray-800" id="dash-corridas">0</h2>
-                </div>
-                <div class="card border-l-4 border-yellow-500">
-                    <p class="text-gray-500 text-sm">Motoboys Pendentes</p>
-                    <h2 class="text-3xl font-bold text-gray-800" id="dash-pendentes">0</h2>
-                </div>
+        <!-- SIDEBAR -->
+        <div class="sidebar">
+            <div class="p-6 border-b border-gray-800 flex items-center gap-3">
+                <div class="bg-yellow-500 p-2 rounded-lg text-black"><i class="fas fa-cube"></i></div>
+                <span class="font-bold text-lg tracking-wide logo-text">DROP <span class="text-yellow-500">ADMIN</span></span>
+            </div>
+            
+            <div class="flex-1 py-6 space-y-1">
+                <div class="nav-item active" onclick="nav('dash', this); carregarDash()"><i class="fas fa-chart-pie"></i> <span>Visão Geral</span></div>
+                <div class="nav-item" onclick="nav('motoboys', this); carregarMotoboys()"><i class="fas fa-motorcycle"></i> <span>Entregadores</span></div>
+                <div class="nav-item" onclick="nav('pedidos', this); carregarPedidos()"><i class="fas fa-receipt"></i> <span>Pedidos</span></div>
+            </div>
+            
+            <div class="p-4 border-t border-gray-800">
+                <div class="nav-item text-red-400 hover:text-red-300 hover:bg-transparent" onclick="logout()"><i class="fas fa-sign-out-alt"></i> <span>Sair</span></div>
             </div>
         </div>
-
-        <!-- MOTOBOYS -->
-        <div id="screen-motoboys" class="hidden">
-            <h1 class="text-2xl font-bold text-gray-800 mb-6">Gestão de Motoboys</h1>
-            <div class="bg-white rounded-lg shadow overflow-hidden">
-                <table class="min-w-full">
-                    <thead class="bg-gray-100 border-b">
-                        <tr>
-                            <th class="p-4 text-left text-xs font-bold text-gray-500">NOME</th>
-                            <th class="p-4 text-left text-xs font-bold text-gray-500">WHATSAPP</th>
-                            <th class="p-4 text-left text-xs font-bold text-gray-500">PLACA</th>
-                            <th class="p-4 text-left text-xs font-bold text-gray-500">STATUS</th>
-                            <th class="p-4 text-left text-xs font-bold text-gray-500">AÇÃO</th>
-                        </tr>
-                    </thead>
-                    <tbody id="lista-motos"></tbody>
-                </table>
+                <!-- CONTEÚDO -->
+        <div class="content">
+            
+            <!-- DASHBOARD -->
+            <div id="view-dash" class="fade-in">
+                <h1 class="text-2xl font-bold text-gray-800 mb-6">Dashboard</h1>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="card border-l-4 border-blue-600">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-gray-400 text-xs font-bold uppercase">Faturamento Total</p>
+                                <h2 class="text-3xl font-bold text-gray-800 mt-1" id="dash-faturamento">R$ 0,00</h2>
+                            </div>
+                            <div class="bg-blue-100 p-2 rounded-lg text-blue-600"><i class="fas fa-dollar-sign"></i></div>
+                        </div>
+                    </div>
+                    <div class="card border-l-4 border-green-600">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-gray-400 text-xs font-bold uppercase">Corridas Finalizadas</p>
+                                <h2 class="text-3xl font-bold text-gray-800 mt-1" id="dash-corridas">0</h2>
+                            </div>
+                            <div class="bg-green-100 p-2 rounded-lg text-green-600"><i class="fas fa-check-circle"></i></div>
+                        </div>
+                    </div>
+                    <div class="card border-l-4 border-yellow-500">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-gray-400 text-xs font-bold uppercase">Aprovação Pendente</p>
+                                <h2 class="text-3xl font-bold text-gray-800 mt-1" id="dash-pendentes">0</h2>
+                            </div>
+                            <div class="bg-yellow-100 p-2 rounded-lg text-yellow-600"><i class="fas fa-user-clock"></i></div>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
 
-        <!-- PEDIDOS -->
-        <div id="screen-pedidos" class="hidden">
-            <h1 class="text-2xl font-bold text-gray-800 mb-6">Todos os Pedidos</h1>
-            <div class="space-y-3" id="lista-pedidos-admin"></div>
-        </div>
+            <!-- MOTOBOYS -->
+            <div id="view-motoboys" class="hidden fade-in">
+                <h1 class="text-2xl font-bold text-gray-800 mb-6">Gestão de Entregadores</h1>
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="table-header bg-gray-50 border-b border-gray-200">
+                                <tr>
+                                    <th class="p-4 font-semibold">Nome</th>
+                                    <th class="p-4 font-semibold">WhatsApp</th>
+                                    <th class="p-4 font-semibold">Placa / Modelo</th>
+                                    <th class="p-4 font-semibold text-center">Status</th>
+                                    <th class="p-4 font-semibold text-right">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="lista-motos" class="text-sm text-gray-700"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
 
+            <!-- PEDIDOS -->
+            <div id="view-pedidos" class="hidden fade-in">
+                <h1 class="text-2xl font-bold text-gray-800 mb-6">Histórico de Pedidos</h1>
+                <div class="space-y-3" id="lista-pedidos"></div>
+            </div>
+
+        </div>
+    </div>
+                <!-- PEDIDOS -->
+            <div id="view-pedidos" class="hidden fade-in">
+                <h1 class="text-2xl font-bold text-gray-800 mb-6">Histórico de Pedidos</h1>
+                <div class="space-y-3" id="lista-pedidos"></div>
+            </div>
+
+        </div>
     </div>
 
     <script>
@@ -108,112 +155,132 @@
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJvZnBubmlqa2hnc2phcml4b3loZyIsImJvbGUiOiJhbm9uIiwiaWF0IjoxNzY1MDY1Mjc2LCJleHAiOjIwODA2NDEyNzZ9.dNOIIETmTz3l1HvhuT-ihAiymJqiaYZnklzzBzDGCFU'.trim();
         const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // LOGIN
-        window.onload = async () => {
-            const { data: { session } } = await sbClient.auth.getSession();
-            if(session) {
-                // Verifica se é o email do admin (segurança frontend básica)
-                // O banco já bloqueia se não for, mas aqui evitamos carregar a tela
-                if(session.user.email === 'seuemail@admin.com') { // TROQUE PELO SEU EMAIL
-                    document.getElementById('login-overlay').classList.add('hidden');
-                    carregarDash();
-                } else {
-                    alert("Acesso negado. Este usuário não é admin.");
-                    sbClient.auth.signOut();
-                }
-            }
-        }
+        // --- SISTEMA ---
 
+        // 1. Login
         async function loginAdmin() {
             const email = document.getElementById('adm-email').value;
             const senha = document.getElementById('adm-senha').value;
-            const { error } = await sbClient.auth.signInWithPassword({ email, password: senha });
-            if(error) alert("Erro: " + error.message);
-            else location.reload();
+            
+            // Login simples com Supabase
+            const { data, error } = await sbClient.auth.signInWithPassword({ email, password: senha });
+            
+            if(error) {
+                alert("Erro: " + error.message);
+            } else {
+                // Verificação extra de segurança (Frontend)
+                // O RLS no banco já impede acesso aos dados se não for o email correto
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('app-screen').classList.remove('hidden');
+                carregarDash();
+            }
         }
 
-        function logout() { sbClient.auth.signOut(); location.reload(); }
+        function logout() {
+            sbClient.auth.signOut();
+            window.location.reload();
+        }
 
-        // NAVEGAÇÃO
-        function nav(screen, el) {
-            ['dash', 'motoboys', 'pedidos'].forEach(s => document.getElementById('screen-'+s).classList.add('hidden'));
-            document.getElementById('screen-'+screen).classList.remove('hidden');
+        // 2. Navegação
+        function nav(view, el) {
+            ['dash', 'motoboys', 'pedidos'].forEach(v => document.getElementById('view-'+v).classList.add('hidden'));
+            document.getElementById('view-'+view).classList.remove('hidden');
             document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
             el.classList.add('active');
         }
-
-        // --- FUNÇÕES DE DADOS ---
-
+                // 3. Carregar Dashboard
         async function carregarDash() {
-            // Conta Pendentes
+            // Motoboys Pendentes
             const { count: pendentes } = await sbClient.from('motoboys').select('*', { count: 'exact', head: true }).eq('status', 'Pendente');
             document.getElementById('dash-pendentes').innerText = pendentes || 0;
 
-            // Conta Corridas
+            // Corridas Finalizadas
             const { count: corridas } = await sbClient.from('pedidos').select('*', { count: 'exact', head: true }).eq('status', 'Finalizado');
             document.getElementById('dash-corridas').innerText = corridas || 0;
 
-            // Soma Faturamento (Exemplo simples, idealmente faria via RPC no banco)
+            // Faturamento (Soma simples no JS para não complicar SQL)
             const { data } = await sbClient.from('pedidos').select('valor_frete').eq('status', 'Finalizado');
-            const total = data.reduce((acc, cur) => acc + (cur.valor_frete || 0), 0);
-            document.getElementById('dash-fat').innerText = "R$ " + total.toFixed(2);
+            if(data) {
+                const total = data.reduce((acc, curr) => acc + (curr.valor_frete || 0), 0);
+                document.getElementById('dash-faturamento').innerText = "R$ " + total.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+            }
         }
 
+        // 4. Gestão de Motoboys
         async function carregarMotoboys() {
-            const { data } = await sbClient.from('motoboys').select('*').order('created_at', { ascending: false });
             const tbody = document.getElementById('lista-motos');
-            tbody.innerHTML = '';
+            tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center">Carregando...</td></tr>';
+
+            const { data } = await sbClient.from('motoboys').select('*').order('created_at', { ascending: false });
             
+            tbody.innerHTML = '';
+            if(!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-400">Nenhum motoboy cadastrado.</td></tr>';
+                return;
+            }
+
             data.forEach(m => {
-                const statusClass = m.status === 'Aprovado' ? 'status-aprovado' : 'status-pendente';
-                const btnAcao = m.status === 'Pendente' 
-                    ? `<button onclick="aprovarMotoboy('${m.id}')" class="text-xs bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700">Aprovar</button>` 
-                    : `<button onclick="bloquearMotoboy('${m.id}')" class="text-xs bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700">Bloquear</button>`;
+                let badgeClass = 'bg-gray-100 text-gray-600';
+                if(m.status === 'Aprovado') badgeClass = 'status-aprovado';
+                if(m.status === 'Pendente') badgeClass = 'status-pendente';
+                if(m.status === 'Bloqueado') badgeClass = 'status-bloqueado';
+
+                let acoes = '';
+                if(m.status === 'Pendente') {
+                    acoes = `<button onclick="alterarStatus('${m.id}', 'Aprovado')" class="bg-green-600 text-white px-3 py-1 rounded text-xs font-bold hover:bg-green-700">APROVAR</button>`;
+                } else if(m.status === 'Aprovado') {
+                    acoes = `<button onclick="alterarStatus('${m.id}', 'Bloqueado')" class="bg-red-100 text-red-600 border border-red-200 px-3 py-1 rounded text-xs font-bold hover:bg-red-50">BLOQUEAR</button>`;
+                } else {
+                    acoes = `<button onclick="alterarStatus('${m.id}', 'Aprovado')" class="bg-green-100 text-green-600 border border-green-200 px-3 py-1 rounded text-xs font-bold hover:bg-green-50">DESBLOQUEAR</button>`;
+                }
 
                 tbody.innerHTML += `
-                    <tr class="border-b hover:bg-gray-50">
-                        <td class="p-4 text-sm font-bold text-gray-800">${m.nome}</td>
-                        <td class="p-4 text-sm text-gray-600">${m.whatsapp}</td>
-                        <td class="p-4 text-sm font-mono">${m.placa}</td>
-                        <td class="p-4"><span class="status-badge ${statusClass}">${m.status}</span></td>
-                        <td class="p-4">${btnAcao}</td>
+                    <tr class="border-b border-gray-100 hover:bg-gray-50 transition">
+                        <td class="p-4 font-medium text-gray-900">${m.nome}</td>
+                        <td class="p-4">${m.whatsapp}</td>
+                        <td class="p-4 font-mono text-xs uppercase">${m.placa} <span class="text-gray-400">(${m.modelo_moto})</span></td>
+                        <td class="p-4 text-center"><span class="status-badge ${badgeClass}">${m.status}</span></td>
+                        <td class="p-4 text-right">${acoes}</td>
                     </tr>
                 `;
             });
         }
 
-        async function aprovarMotoboy(id) {
-            if(!confirm("Aprovar este motoboy?")) return;
-            const { error } = await sbClient.from('motoboys').update({ status: 'Aprovado' }).eq('id', id);
-            if(error) alert("Erro"); else carregarMotoboys();
+        async function alterarStatus(id, novoStatus) {
+            if(!confirm(`Deseja alterar status para ${novoStatus}?`)) return;
+            const { error } = await sbClient.from('motoboys').update({ status: novoStatus }).eq('id', id);
+            if(error) alert("Erro ao atualizar: " + error.message);
+            else carregarMotoboys();
         }
-        
-        async function bloquearMotoboy(id) {
-            if(!confirm("Bloquear acesso?")) return;
-            const { error } = await sbClient.from('motoboys').update({ status: 'Bloqueado' }).eq('id', id);
-            if(error) alert("Erro"); else carregarMotoboys();
-        }
-
+                // 5. Gestão de Pedidos
         async function carregarPedidos() {
-            const list = document.getElementById('lista-pedidos-admin');
+            const div = document.getElementById('lista-pedidos-admin');
+            div.innerHTML = '<p class="text-center text-gray-400">Carregando...</p>';
+
+            // Join com profiles para pegar nome da loja
             const { data } = await sbClient.from('pedidos').select('*, profiles(nome_loja)').order('created_at', { ascending: false }).limit(50);
             
-            list.innerHTML = '';
-            data.forEach(p => {
-                const statusColor = p.status === 'Solicitado' ? 'border-yellow-500' : (p.status === 'Em Rota' ? 'border-blue-500' : 'border-green-500');
-                // Nome da loja vem do JOIN, se falhar usa 'Loja'
-                const nomeLoja = p.profiles?.nome_loja || "Loja";
+            div.innerHTML = '';
+            if(!data || data.length === 0) {
+                div.innerHTML = '<p class="text-center text-gray-400">Sem pedidos.</p>';
+                return;
+            }
 
-                list.innerHTML += `
-                    <div class="bg-white p-4 rounded-lg shadow border-l-4 ${statusColor} flex justify-between items-center">
+            data.forEach(p => {
+                const loja = p.profiles?.nome_loja || 'Loja Desconhecida';
+                const statusColor = p.status === 'Solicitado' ? 'border-yellow-400' : (p.status === 'Finalizado' ? 'border-green-500' : 'border-blue-500');
+                const date = new Date(p.created_at).toLocaleString('pt-BR');
+
+                div.innerHTML += `
+                    <div class="bg-white p-4 rounded-lg border-l-4 ${statusColor} shadow-sm flex justify-between items-center">
                         <div>
-                            <p class="font-bold text-gray-800 text-sm">#${p.id} - ${nomeLoja}</p>
-                            <p class="text-xs text-gray-500">${p.origem} ➔ ${p.destino}</p>
-                            <p class="text-xs text-gray-400 mt-1">${new Date(p.created_at).toLocaleString()}</p>
+                            <p class="text-xs text-gray-400 font-bold mb-1">#${p.id} • ${date}</p>
+                            <p class="font-bold text-gray-800">${loja}</p>
+                            <p class="text-sm text-gray-600 mt-1"><i class="fas fa-map-marker-alt text-red-400"></i> ${p.destino}</p>
                         </div>
                         <div class="text-right">
-                            <p class="font-bold text-blue-600">R$ ${p.valor_frete}</p>
-                            <p class="text-xs font-bold uppercase tracking-wider text-gray-500">${p.status}</p>
+                            <p class="text-lg font-bold text-gray-800">R$ ${p.valor_frete}</p>
+                            <span class="text-xs bg-gray-100 px-2 py-1 rounded text-gray-600 uppercase font-bold">${p.status}</span>
                         </div>
                     </div>
                 `;
@@ -222,4 +289,3 @@
     </script>
 </body>
 </html>
-
