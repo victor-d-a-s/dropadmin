@@ -46,7 +46,7 @@
         <div class="bg-gray-800 p-8 rounded-2xl w-96 text-center border border-gray-700 shadow-2xl">
             <i class="fas fa-user-shield text-5xl text-yellow-500 mb-4"></i>
             <h2 class="text-2xl font-bold text-white mb-6">Acesso Administrativo</h2>
-            <input type="email" id="adm-email" class="w-full bg-gray-900 border border-gray-600 text-white p-3 rounded-lg mb-3" placeholder="admin@drop.com">
+            <input type="email" id="adm-email" class="w-full bg-gray-900 border border-gray-600 text-white p-3 rounded-lg mb-3" placeholder="Seu E-mail de Admin">
             <input type="password" id="adm-senha" class="w-full bg-gray-900 border border-gray-600 text-white p-3 rounded-lg mb-6" placeholder="Senha">
             <button onclick="loginAdmin()" class="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-3 rounded-lg">ENTRAR</button>
         </div>
@@ -214,8 +214,9 @@
 
     <script>
         // --- CONFIGURAÇÃO ---
+        // ATUALIZADO CONFORME SOLICITADO
         const SUPABASE_URL = 'https://ofpnnijkhgsjarixoyhg.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJvZnBubmlqa2hnc2phcml4b3loZyIsImJvbGUiOiJhbm9uIiwiaWF0IjoxNzY1MDY1Mjc2LCJleHAiOjIwODA2NDEyNzZ9.dNOIIETmTz3l1HvhuT-ihAiymJqiaYZnklzzBzDGCFU';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9mcG5uaWpraGdzamFyaXhveWhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwNjUyNzYsImV4cCI6MjA4MDY0MTI3Nn0.dNOIIETmTz3l1HvhuT-ihAiymJqiaYZnklzzBzDGCFU';
         const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         // --- SISTEMA ---
@@ -274,7 +275,7 @@
             document.getElementById('dash-fatur-hoje').innerText = `R$ ${total.toFixed(2)}`;
 
             // Total Lojas
-            const { count: lojas } = await sbClient.from('profiles').select('*', { count: 'exact', head: true }).is('funcao', null); // Assumindo que motoboy tem funcao='motoboy' e lojas tem null ou 'loja'
+            const { count: lojas } = await sbClient.from('profiles').select('*', { count: 'exact', head: true }).is('funcao', null);
             document.getElementById('dash-lojas').innerText = lojas || 0;
         }
 
@@ -283,7 +284,10 @@
             const div = document.getElementById('lista-pedidos');
             div.innerHTML = '<p class="text-center text-gray-400">Carregando...</p>';
             
-            const { data } = await sbClient.from('pedidos').select('*, profiles(nome_loja), motoboys(nome)').order('created_at', { ascending: false }).limit(50);
+            // Correção: Garantindo o relacionamento com motoboys (entregador_id)
+            const { data } = await sbClient.from('pedidos')
+                .select('*, profiles(nome_loja), motoboys(nome)')
+                .order('created_at', { ascending: false }).limit(50);
             
             div.innerHTML = '';
             if(!data || data.length === 0) return div.innerHTML = '<p class="text-center text-gray-400">Sem pedidos.</p>';
@@ -296,6 +300,7 @@
                 if(p.status === 'cancelado') stClass = 'st-cancelado';
 
                 const loja = p.profiles?.nome_loja || 'Loja Desconhecida';
+                // Verifica se veio o objeto motoboys pelo relacionamento
                 const moto = p.motoboys?.nome ? `<i class="fas fa-motorcycle text-xs"></i> ${p.motoboys.nome}` : '<span class="text-gray-400 text-xs">Aguardando...</span>';
 
                 div.innerHTML += `
@@ -317,7 +322,7 @@
             });
         }
 
-       function abrirPedido(p) {
+      function abrirPedido(p) {
             document.getElementById('d-id').innerText = p.id.substring(0,8);
             document.getElementById('d-status').innerText = p.status;
             document.getElementById('d-status').className = 'badge ' + (p.status==='solicitado'?'b-pendente':(p.status==='cancelado'?'b-bloqueado':'b-aprovado'));
@@ -383,15 +388,12 @@
         async function altStatus(id, st) {
             if(!confirm(`Mudar status para ${st}?`)) return;
             await sbClient.from('motoboys').update({ status: st }).eq('id', id);
-            // O realtime atualiza a lista
         }
 
         // --- LOJAS & FINANCEIRO ---
         let lojasCache = [];
         async function carregarLojas() {
             const tb = document.getElementById('lista-lojas');
-            // Busca profiles que NÃO são motoboys (funcao != motoboy ou null)
-            // Filtro simples no JS pois SQL 'is not' as vezes varia no Supabase JS
             const { data } = await sbClient.from('profiles').select('*').order('nome_loja');
             if(data) {
                 // Filtra quem não tem placa de moto (provavelmente é loja)
@@ -448,7 +450,6 @@
             else {
                 alert("Saldo adicionado!");
                 document.getElementById('modal-saldo').classList.add('hidden');
-                // Realtime atualiza a lista
             }
         }
 
