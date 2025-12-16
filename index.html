@@ -11,47 +11,44 @@
     <style>
         body { font-family: 'Segoe UI', sans-serif; background-color: #f3f4f6; }
         
-        /* Layout Sidebar */
+        /* Layout */
         .sidebar { width: 260px; height: 100vh; background: #111827; color: white; position: fixed; left: 0; top: 0; display: flex; flex-direction: column; z-index: 50; }
         .content { margin-left: 260px; padding: 30px; transition: 0.3s; }
         
-        /* Cards */
-        .card { background: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        
-        /* Menu Items */
+        /* Nav */
         .nav-item { padding: 16px 24px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 12px; color: #9CA3AF; font-size: 14px; font-weight: 500; }
         .nav-item:hover, .nav-item.active { background: #1F2937; color: #FBBF24; border-right: 3px solid #FBBF24; }
-        .nav-item i { width: 20px; text-align: center; font-size: 18px; }
         
-        /* Tabela */
-        .table-header { background-color: #F9FAFB; text-transform: uppercase; font-size: 11px; color: #6B7280; letter-spacing: 0.05em; }
-        .status-badge { padding: 4px 10px; border-radius: 99px; font-size: 11px; font-weight: 800; text-transform: uppercase; }
-        .status-pendente { background: #FEF3C7; color: #D97706; }
-        .status-aprovado { background: #D1FAE5; color: #059669; }
-        .status-bloqueado { background: #FEE2E2; color: #DC2626; }
+        /* Badges */
+        .badge { padding: 4px 10px; border-radius: 99px; font-size: 11px; font-weight: 800; text-transform: uppercase; }
+        .b-pendente { background: #FEF3C7; color: #D97706; }
+        .b-aprovado { background: #D1FAE5; color: #059669; }
+        .b-bloqueado { background: #FEE2E2; color: #DC2626; }
+        
+        /* Pedidos Colors */
+        .st-solicitado { border-left: 4px solid #FBBF24; background: #FFFBEB; }
+        .st-em_rota { border-left: 4px solid #3B82F6; background: #EFF6FF; }
+        .st-concluido { border-left: 4px solid #10B981; background: #ECFDF5; }
+        .st-cancelado { border-left: 4px solid #EF4444; background: #FEF2F2; opacity: 0.7; }
 
-        /* Login Overlay */
-        .overlay { position: fixed; inset: 0; background: #111827; z-index: 100; display: flex; align-items: center; justify-content: center; }
-
-        /* Responsividade */
+        .modal-bg { background-color: rgba(0,0,0,0.5); }
+        
         @media (max-width: 768px) {
             .sidebar { width: 70px; }
-            .sidebar span { display: none; }
+            .sidebar span, .logo-text { display: none; }
             .content { margin-left: 70px; padding: 15px; }
-            .logo-text { display: none; }
         }
     </style>
 </head>
 <body>
 
-    <div id="login-screen" class="overlay">
-        <div class="bg-gray-800 p-8 rounded-2xl w-96 text-center shadow-2xl border border-gray-700">
+    <div id="login-screen" class="fixed inset-0 bg-gray-900 z-[100] flex items-center justify-center">
+        <div class="bg-gray-800 p-8 rounded-2xl w-96 text-center border border-gray-700 shadow-2xl">
             <i class="fas fa-user-shield text-5xl text-yellow-500 mb-4"></i>
-            <h2 class="text-2xl font-bold text-white mb-6">Painel Mestre</h2>
-            <input type="email" id="adm-email" class="w-full bg-gray-900 border border-gray-700 text-white p-3 rounded-lg mb-3" placeholder="E-mail Admin">
-            <input type="password" id="adm-senha" class="w-full bg-gray-900 border border-gray-700 text-white p-3 rounded-lg mb-6" placeholder="Senha">
-            <button onclick="loginAdmin()" class="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-3 rounded-lg transition">ACESSAR SISTEMA</button>
-            <p id="login-msg" class="text-red-400 text-xs mt-4 hidden"></p>
+            <h2 class="text-2xl font-bold text-white mb-6">Acesso Administrativo</h2>
+            <input type="email" id="adm-email" class="w-full bg-gray-900 border border-gray-600 text-white p-3 rounded-lg mb-3" placeholder="admin@drop.com">
+            <input type="password" id="adm-senha" class="w-full bg-gray-900 border border-gray-600 text-white p-3 rounded-lg mb-6" placeholder="Senha">
+            <button onclick="loginAdmin()" class="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-3 rounded-lg">ENTRAR</button>
         </div>
     </div>
 
@@ -64,67 +61,37 @@
             </div>
             
             <div class="flex-1 py-6 space-y-1">
-                <div class="nav-item active" onclick="nav('dash', this); carregarDash()"><i class="fas fa-chart-pie"></i> <span>Visão Geral</span></div>
+                <div class="nav-item active" onclick="nav('dash', this); carregarDash()"><i class="fas fa-chart-pie"></i> <span>Dashboard</span></div>
+                <div class="nav-item" onclick="nav('pedidos', this); carregarPedidos()"><i class="fas fa-receipt"></i> <span>Pedidos (Live)</span></div>
                 <div class="nav-item" onclick="nav('motoboys', this); carregarMotoboys()"><i class="fas fa-motorcycle"></i> <span>Entregadores</span></div>
-                <div class="nav-item" onclick="nav('pedidos', this); carregarPedidos()"><i class="fas fa-receipt"></i> <span>Pedidos Ao Vivo</span></div>
+                <div class="nav-item" onclick="nav('lojas', this); carregarLojas()"><i class="fas fa-store"></i> <span>Lojas & Saldo</span></div>
             </div>
             
             <div class="p-4 border-t border-gray-800">
-                <div class="nav-item text-red-400 hover:text-red-300 hover:bg-transparent" onclick="logout()"><i class="fas fa-sign-out-alt"></i> <span>Sair</span></div>
+                <div class="nav-item text-red-400 hover:bg-gray-800" onclick="logout()"><i class="fas fa-sign-out-alt"></i> <span>Sair</span></div>
             </div>
         </div>
 
         <div class="content">
             
             <div id="view-dash" class="fade-in">
-                <h1 class="text-2xl font-bold text-gray-800 mb-6">Dashboard <span class="text-xs text-green-600 font-normal bg-green-100 px-2 py-1 rounded ml-2"><i class="fas fa-circle text-[8px] mr-1"></i>Ao Vivo</span></h1>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="card border-l-4 border-blue-600">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <p class="text-gray-400 text-xs font-bold uppercase">Faturamento Total</p>
-                                <h2 class="text-3xl font-bold text-gray-800 mt-1" id="dash-faturamento">R$ 0,00</h2>
-                            </div>
-                            <div class="bg-blue-100 p-2 rounded-lg text-blue-600"><i class="fas fa-dollar-sign"></i></div>
-                        </div>
+                <h1 class="text-2xl font-bold text-gray-800 mb-6">Visão Geral <span class="text-xs font-normal bg-green-100 text-green-700 px-2 py-1 rounded ml-2"><i class="fas fa-wifi text-[8px]"></i> Online</span></h1>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-blue-500">
+                        <p class="text-gray-400 text-xs font-bold uppercase">Faturamento (Hoje)</p>
+                        <h2 class="text-3xl font-bold text-gray-800 mt-1" id="dash-fatur-hoje">R$ 0,00</h2>
                     </div>
-                    <div class="card border-l-4 border-green-600">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <p class="text-gray-400 text-xs font-bold uppercase">Corridas Finalizadas</p>
-                                <h2 class="text-3xl font-bold text-gray-800 mt-1" id="dash-corridas">0</h2>
-                            </div>
-                            <div class="bg-green-100 p-2 rounded-lg text-green-600"><i class="fas fa-check-circle"></i></div>
-                        </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-yellow-500">
+                        <p class="text-gray-400 text-xs font-bold uppercase">Aprovação Pendente</p>
+                        <h2 class="text-3xl font-bold text-gray-800 mt-1" id="dash-pendentes">0</h2>
                     </div>
-                    <div class="card border-l-4 border-yellow-500 cursor-pointer hover:bg-yellow-50 transition" onclick="nav('motoboys', document.querySelectorAll('.nav-item')[1]); carregarMotoboys()">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <p class="text-gray-400 text-xs font-bold uppercase">Aprovação Pendente</p>
-                                <h2 class="text-3xl font-bold text-gray-800 mt-1" id="dash-pendentes">0</h2>
-                            </div>
-                            <div class="bg-yellow-100 p-2 rounded-lg text-yellow-600"><i class="fas fa-user-clock"></i></div>
-                        </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-green-500">
+                        <p class="text-gray-400 text-xs font-bold uppercase">Corridas Ativas</p>
+                        <h2 class="text-3xl font-bold text-gray-800 mt-1" id="dash-ativas">0</h2>
                     </div>
-                </div>
-            </div>
-
-            <div id="view-motoboys" class="hidden fade-in">
-                <h1 class="text-2xl font-bold text-gray-800 mb-6">Gestão de Entregadores</h1>
-                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse">
-                            <thead class="table-header bg-gray-50 border-b border-gray-200">
-                                <tr>
-                                    <th class="p-4 font-semibold">Nome</th>
-                                    <th class="p-4 font-semibold">WhatsApp</th>
-                                    <th class="p-4 font-semibold">Placa / Modelo</th>
-                                    <th class="p-4 font-semibold text-center">Status</th>
-                                    <th class="p-4 font-semibold text-right">Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody id="lista-motos" class="text-sm text-gray-700"></tbody>
-                        </table>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-purple-500">
+                        <p class="text-gray-400 text-xs font-bold uppercase">Total Lojas</p>
+                        <h2 class="text-3xl font-bold text-gray-800 mt-1" id="dash-lojas">0</h2>
                     </div>
                 </div>
             </div>
@@ -132,237 +99,359 @@
             <div id="view-pedidos" class="hidden fade-in">
                 <div class="flex justify-between items-center mb-6">
                     <h1 class="text-2xl font-bold text-gray-800">Monitor de Pedidos</h1>
-                    <button onclick="carregarPedidos()" class="text-sm text-blue-600 hover:underline"><i class="fas fa-sync"></i> Atualizar</button>
+                    <button onclick="carregarPedidos()" class="text-blue-600 hover:underline text-sm"><i class="fas fa-sync"></i> Atualizar</button>
                 </div>
-                <div class="space-y-3" id="lista-pedidos"></div>
+                <div id="lista-pedidos" class="space-y-3"></div>
+            </div>
+
+            <div id="view-motoboys" class="hidden fade-in">
+                <h1 class="text-2xl font-bold text-gray-800 mb-6">Gestão de Entregadores</h1>
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                    <table class="w-full text-left">
+                        <thead class="bg-gray-50 border-b border-gray-200 text-xs text-gray-500 uppercase">
+                            <tr>
+                                <th class="p-4">Nome / CPF</th>
+                                <th class="p-4">Veículo</th>
+                                <th class="p-4">Contato</th>
+                                <th class="p-4 text-center">Status</th>
+                                <th class="p-4 text-right">Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lista-motos" class="text-sm text-gray-700"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="view-lojas" class="hidden fade-in">
+                <h1 class="text-2xl font-bold text-gray-800 mb-6">Lojas e Financeiro</h1>
+                <div class="mb-4">
+                    <input type="text" id="busca-loja" onkeyup="filtrarLojas()" placeholder="Buscar loja por nome..." class="w-full p-3 border rounded-lg bg-white shadow-sm">
+                </div>
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                    <table class="w-full text-left">
+                        <thead class="bg-gray-50 border-b border-gray-200 text-xs text-gray-500 uppercase">
+                            <tr>
+                                <th class="p-4">Loja</th>
+                                <th class="p-4">Responsável</th>
+                                <th class="p-4">Saldo Atual</th>
+                                <th class="p-4 text-right">Gerenciar</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lista-lojas" class="text-sm text-gray-700"></tbody>
+                    </table>
+                </div>
             </div>
 
         </div>
     </div>
 
+    <div id="modal-saldo" class="hidden fixed inset-0 modal-bg z-[60] flex items-center justify-center">
+        <div class="bg-white p-6 rounded-xl w-96 shadow-2xl animate-fade-in">
+            <h3 class="text-lg font-bold text-gray-800 mb-1">Adicionar Saldo</h3>
+            <p id="modal-loja-nome" class="text-sm text-gray-500 mb-4">Loja...</p>
+            <input type="number" id="input-saldo" class="w-full border p-3 rounded-lg text-lg mb-4 font-bold text-green-700" placeholder="0.00">
+            <div class="flex gap-2">
+                <button onclick="document.getElementById('modal-saldo').classList.add('hidden')" class="w-1/2 py-3 bg-gray-100 rounded-lg text-gray-600 font-bold">Cancelar</button>
+                <button onclick="confirmarSaldo()" class="w-1/2 py-3 bg-green-600 hover:bg-green-500 text-white rounded-lg font-bold">Confirmar</button>
+            </div>
+            <input type="hidden" id="modal-loja-id">
+        </div>
+    </div>
+
+    <div id="modal-pedido" class="hidden fixed inset-0 modal-bg z-[60] flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-lg rounded-xl shadow-2xl overflow-hidden animate-fade-in relative">
+            <button onclick="document.getElementById('modal-pedido').classList.add('hidden')" class="absolute top-3 right-3 text-gray-400 hover:text-red-500 text-2xl">&times;</button>
+            <div class="bg-gray-50 p-6 border-b">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xl font-bold text-gray-800">Pedido #<span id="d-id">...</span></h3>
+                    <span id="d-status" class="badge">...</span>
+                </div>
+                <p id="d-loja" class="text-sm text-gray-500 mt-1">Loja...</p>
+            </div>
+            <div class="p-6 space-y-4">
+                <div class="flex justify-between bg-blue-50 p-4 rounded-lg">
+                    <div>
+                        <p class="text-xs text-blue-500 font-bold uppercase">PIN de Entrega</p>
+                        <p id="d-pin" class="text-3xl font-mono font-bold text-blue-800 tracking-widest">0000</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-xs text-blue-500 font-bold uppercase">Valor Frete</p>
+                        <p id="d-valor" class="text-2xl font-bold text-blue-800">R$ 0,00</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-xs text-gray-400 font-bold uppercase">Pagamento</p>
+                        <p id="d-pagamento" class="font-bold text-gray-800">...</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-400 font-bold uppercase">Destinatário</p>
+                        <p id="d-cliente" class="font-bold text-gray-800">...</p>
+                        <p id="d-tel" class="text-xs text-gray-500">...</p>
+                    </div>
+                </div>
+
+                <div class="border-t pt-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-2 h-2 rounded-full bg-blue-500"></div>
+                        <p id="d-origem" class="text-sm text-gray-600 truncate">...</p>
+                    </div>
+                    <div class="h-4 border-l ml-1 border-gray-300"></div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-2 h-2 rounded-full bg-yellow-500"></div>
+                        <p id="d-destino" class="text-sm text-gray-600 truncate">...</p>
+                    </div>
+                </div>
+                
+                <div id="box-entregador" class="bg-gray-100 p-3 rounded-lg hidden">
+                    <p class="text-xs text-gray-500 font-bold uppercase mb-1">Entregador</p>
+                    <p id="d-motoboy" class="font-bold text-gray-800">...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // CONFIGURAÇÃO SUPABASE
-        const SUPABASE_URL = 'https://ofpnnijkhgsjarixoyhg.supabase.co'; // Mantenha sua URL
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJvZnBubmlqa2hnc2phcml4b3loZyIsImJvbGUiOiJhbm9uIiwiaWF0IjoxNzY1MDY1Mjc2LCJleHAiOjIwODA2NDEyNzZ9.dNOIIETmTz3l1HvhuT-ihAiymJqiaYZnklzzBzDGCFU'; // Mantenha sua Key
+        // --- CONFIGURAÇÃO ---
+        const SUPABASE_URL = 'https://ofpnnijkhgsjarixoyhg.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJvZnBubmlqa2hnc2phcml4b3loZyIsImJvbGUiOiJhbm9uIiwiaWF0IjoxNzY1MDY1Mjc2LCJleHAiOjIwODA2NDEyNzZ9.dNOIIETmTz3l1HvhuT-ihAiymJqiaYZnklzzBzDGCFU';
         const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         // --- SISTEMA ---
 
-        // 0. Inicialização e Check de Sessão
-        window.onload = async () => {
-            const { data: { session } } = await sbClient.auth.getSession();
-            if (session) {
-                entrarNoSistema();
-            } else {
-                document.getElementById('login-screen').classList.remove('hidden');
-            }
-        };
-
-        function entrarNoSistema() {
-            document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('app-screen').classList.remove('hidden');
-            carregarDash();
-            iniciarRealtime();
-        }
-
-        // 1. Login
         async function loginAdmin() {
             const email = document.getElementById('adm-email').value;
             const senha = document.getElementById('adm-senha').value;
-            const msg = document.getElementById('login-msg');
-            
-            msg.classList.add('hidden');
-            
-            const { data, error } = await sbClient.auth.signInWithPassword({ email, password: senha });
-            
-            if(error) {
-                msg.innerText = "Erro: " + error.message;
-                msg.classList.remove('hidden');
-            } else {
-                entrarNoSistema();
-            }
+            const { error } = await sbClient.auth.signInWithPassword({ email, password: senha });
+            if(error) alert("Erro: " + error.message);
+            else initSystem();
         }
 
-        function logout() {
-            sbClient.auth.signOut();
-            window.location.reload();
+        function logout() { sbClient.auth.signOut(); location.reload(); }
+
+        window.onload = async () => {
+            const { data: { session } } = await sbClient.auth.getSession();
+            if(session) initSystem();
+        };
+
+        function initSystem() {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('app-screen').classList.remove('hidden');
+            carregarDash();
+            
+            // Realtime Global
+            sbClient.channel('admin-chan')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos' }, () => { carregarDash(); if(isVisible('pedidos')) carregarPedidos(); })
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'motoboys' }, () => { carregarDash(); if(isVisible('motoboys')) carregarMotoboys(); })
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => { if(isVisible('lojas')) carregarLojas(); })
+                .subscribe();
         }
 
-        // 2. Navegação
+        function isVisible(id) { return !document.getElementById('view-'+id).classList.contains('hidden'); }
+
         function nav(view, el) {
-            ['dash', 'motoboys', 'pedidos'].forEach(v => document.getElementById('view-'+v).classList.add('hidden'));
+            ['dash', 'motoboys', 'pedidos', 'lojas'].forEach(v => document.getElementById('view-'+v).classList.add('hidden'));
             document.getElementById('view-'+view).classList.remove('hidden');
             document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
             el.classList.add('active');
         }
 
-        // 3. Realtime (ATUALIZAÇÃO AUTOMÁTICA)
-        function iniciarRealtime() {
-            const channel = sbClient
-                .channel('admin-changes')
-                .on(
-                    'postgres_changes',
-                    { event: '*', schema: 'public', table: 'pedidos' },
-                    (payload) => {
-                        console.log('Mudança em pedidos!', payload);
-                        carregarDash();
-                        // Só recarrega a lista se estiver na tela de pedidos
-                        if(!document.getElementById('view-pedidos').classList.contains('hidden')) {
-                            carregarPedidos();
-                        }
-                    }
-                )
-                .on(
-                    'postgres_changes',
-                    { event: '*', schema: 'public', table: 'motoboys' },
-                    (payload) => {
-                        console.log('Mudança em motoboys!', payload);
-                        carregarDash();
-                        if(!document.getElementById('view-motoboys').classList.contains('hidden')) {
-                            carregarMotoboys();
-                        }
-                    }
-                )
-                .subscribe();
-        }
-
-        // 4. Carregar Dashboard
+        // --- DASHBOARD ---
         async function carregarDash() {
-            // Motoboys Pendentes
-            const { count: pendentes } = await sbClient.from('motoboys').select('*', { count: 'exact', head: true }).eq('status', 'Pendente');
-            document.getElementById('dash-pendentes').innerText = pendentes || 0;
-
-            // Corridas Finalizadas
-            const { count: corridas } = await sbClient.from('pedidos').select('*', { count: 'exact', head: true }).eq('status', 'Finalizado');
-            document.getElementById('dash-corridas').innerText = corridas || 0;
-
-            // Faturamento
-            const { data } = await sbClient.from('pedidos').select('valor_frete').eq('status', 'Finalizado');
-            if(data) {
-                const total = data.reduce((acc, curr) => acc + (curr.valor_frete || 0), 0);
-                document.getElementById('dash-faturamento').innerText = "R$ " + total.toLocaleString('pt-BR', {minimumFractionDigits: 2});
-            }
-        }
-
-        // 5. Gestão de Motoboys
-        async function carregarMotoboys() {
-            const tbody = document.getElementById('lista-motos');
-            // Não limpamos com "Carregando..." se já tiver dados para evitar piscar tela no realtime,
-            // apenas se estiver vazio.
-            if(tbody.children.length === 0) tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center">Carregando...</td></tr>';
-
-            const { data, error } = await sbClient.from('motoboys').select('*').order('created_at', { ascending: false });
+            // Pendentes
+            const { count: pend } = await sbClient.from('motoboys').select('*', { count: 'exact', head: true }).eq('status', 'Pendente');
+            document.getElementById('dash-pendentes').innerText = pend || 0;
             
-            if (error) {
-                console.error(error);
-                return;
-            }
+            // Ativas
+            const { count: ativas } = await sbClient.from('pedidos').select('*', { count: 'exact', head: true }).or('status.eq.solicitado,status.eq.em_rota');
+            document.getElementById('dash-ativas').innerText = ativas || 0;
 
-            tbody.innerHTML = '';
-            if(!data || data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-400">Nenhum motoboy cadastrado.</td></tr>';
-                return;
-            }
+            // Faturamento Hoje
+            const hoje = new Date().toISOString().split('T')[0];
+            const { data: peds } = await sbClient.from('pedidos').select('valor_frete').eq('status', 'concluido').gte('created_at', hoje + 'T00:00:00');
+            const total = peds ? peds.reduce((acc, cur) => acc + (cur.valor_frete || 0), 0) : 0;
+            document.getElementById('dash-fatur-hoje').innerText = `R$ ${total.toFixed(2)}`;
 
-            data.forEach(m => {
-                let badgeClass = 'bg-gray-100 text-gray-600';
-                if(m.status === 'Aprovado') badgeClass = 'status-aprovado';
-                if(m.status === 'Pendente') badgeClass = 'status-pendente';
-                if(m.status === 'Bloqueado') badgeClass = 'status-bloqueado';
-
-                let acoes = '';
-                if(m.status === 'Pendente') {
-                    acoes = `<button onclick="alterarStatus('${m.id}', 'Aprovado')" class="bg-green-600 text-white px-3 py-1 rounded text-xs font-bold hover:bg-green-700 transition">APROVAR</button>`;
-                } else if(m.status === 'Aprovado') {
-                    acoes = `<button onclick="alterarStatus('${m.id}', 'Bloqueado')" class="bg-red-100 text-red-600 border border-red-200 px-3 py-1 rounded text-xs font-bold hover:bg-red-50 transition">BLOQUEAR</button>`;
-                } else {
-                    acoes = `<button onclick="alterarStatus('${m.id}', 'Aprovado')" class="bg-green-100 text-green-600 border border-green-200 px-3 py-1 rounded text-xs font-bold hover:bg-green-50 transition">DESBLOQUEAR</button>`;
-                }
-
-                tbody.innerHTML += `
-                    <tr class="border-b border-gray-100 hover:bg-gray-50 transition animate-fade">
-                        <td class="p-4 font-medium text-gray-900">${m.nome}</td>
-                        <td class="p-4">${m.whatsapp || '-'}</td>
-                        <td class="p-4 font-mono text-xs uppercase">${m.placa || 'Sem Placa'} <span class="text-gray-400">(${m.modelo_moto || '-'})</span></td>
-                        <td class="p-4 text-center"><span class="status-badge ${badgeClass}">${m.status}</span></td>
-                        <td class="p-4 text-right">${acoes}</td>
-                    </tr>
-                `;
-            });
+            // Total Lojas
+            const { count: lojas } = await sbClient.from('profiles').select('*', { count: 'exact', head: true }).is('funcao', null); // Assumindo que motoboy tem funcao='motoboy' e lojas tem null ou 'loja'
+            document.getElementById('dash-lojas').innerText = lojas || 0;
         }
 
-        async function alterarStatus(id, novoStatus) {
-            if(!confirm(`Deseja alterar status para ${novoStatus}?`)) return;
-            const { error } = await sbClient.from('motoboys').update({ status: novoStatus }).eq('id', id);
-            if(error) alert("Erro ao atualizar: " + error.message);
-            // O Realtime atualizará a tabela automaticamente
-        }
-
-        // 6. Gestão de Pedidos
+        // --- PEDIDOS ---
         async function carregarPedidos() {
-            // CORREÇÃO: ID correto agora é 'lista-pedidos'
             const div = document.getElementById('lista-pedidos');
+            div.innerHTML = '<p class="text-center text-gray-400">Carregando...</p>';
             
-            // Join com profiles para pegar nome da loja
-            // Nota: Certifique-se que existe uma FK (foreign key) entre pedidos.user_id e profiles.id no banco
-            const { data, error } = await sbClient
-                .from('pedidos')
-                .select('*, profiles(nome_loja, endereco)') 
-                .order('created_at', { ascending: false })
-                .limit(50);
+            const { data } = await sbClient.from('pedidos').select('*, profiles(nome_loja), motoboys(nome)').order('created_at', { ascending: false }).limit(50);
             
-            if(error) {
-                console.error("Erro ao carregar pedidos:", error);
-                return;
-            }
-
             div.innerHTML = '';
-            if(!data || data.length === 0) {
-                div.innerHTML = '<p class="text-center text-gray-400 py-10">Sem pedidos no momento.</p>';
-                return;
-            }
+            if(!data || data.length === 0) return div.innerHTML = '<p class="text-center text-gray-400">Sem pedidos.</p>';
 
             data.forEach(p => {
-                const loja = p.profiles?.nome_loja || 'Loja Desconhecida';
-                const endereco = p.profiles?.endereco || 'Endereço não informado';
-                
-                let statusColor = 'border-gray-300';
-                let statusIcon = '<i class="fas fa-clock"></i>';
-                
-                if(p.status === 'Solicitado') {
-                    statusColor = 'border-yellow-400 bg-yellow-50';
-                    statusIcon = '<i class="fas fa-exclamation-circle text-yellow-500"></i>';
-                } else if (p.status === 'Em Rota') {
-                    statusColor = 'border-blue-500 bg-blue-50';
-                    statusIcon = '<i class="fas fa-motorcycle text-blue-500"></i>';
-                } else if (p.status === 'Finalizado') {
-                    statusColor = 'border-green-500 bg-white';
-                    statusIcon = '<i class="fas fa-check-circle text-green-500"></i>';
-                }
+                let stClass = 'border-gray-300';
+                if(p.status === 'solicitado') stClass = 'st-solicitado';
+                if(p.status === 'em_rota') stClass = 'st-em_rota';
+                if(p.status === 'concluido') stClass = 'st-concluido';
+                if(p.status === 'cancelado') stClass = 'st-cancelado';
 
-                const date = new Date(p.created_at).toLocaleString('pt-BR', { hour: '2-digit', minute:'2-digit', day: '2-digit', month: '2-digit' });
+                const loja = p.profiles?.nome_loja || 'Loja Desconhecida';
+                const moto = p.motoboys?.nome ? `<i class="fas fa-motorcycle text-xs"></i> ${p.motoboys.nome}` : '<span class="text-gray-400 text-xs">Aguardando...</span>';
 
                 div.innerHTML += `
-                    <div class="p-4 rounded-lg border-l-4 ${statusColor} shadow-sm flex justify-between items-center transition hover:shadow-md">
+                    <div onclick='abrirPedido(${JSON.stringify(p).replace(/'/g, "")})' class="bg-white p-4 rounded-lg shadow-sm flex justify-between items-center cursor-pointer hover:shadow-md transition ${stClass}">
                         <div>
-                            <p class="text-xs text-gray-400 font-bold mb-1">#${p.id.substring(0,8)}... • ${date}</p>
-                            <p class="font-bold text-gray-800 text-lg">${loja}</p>
-                            <p class="text-sm text-gray-600 mt-1 flex items-center gap-2">
-                                <i class="fas fa-store text-gray-400"></i> ${endereco} <br>
-                                <i class="fas fa-map-marker-alt text-red-400 ml-1"></i> Destino: ${p.pin_entrega ? '***' : 'Ver detalhes'}
-                            </p>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-xs font-bold text-gray-500">#${p.id.substring(0,6)}</span>
+                                <span class="text-xs font-bold uppercase bg-gray-100 px-2 rounded text-gray-600">${p.status}</span>
+                            </div>
+                            <p class="font-bold text-gray-800">${loja}</p>
+                            <p class="text-sm text-gray-500">${moto}</p>
                         </div>
                         <div class="text-right">
-                            <p class="text-xl font-bold text-gray-800">R$ ${parseFloat(p.valor_frete).toFixed(2).replace('.', ',')}</p>
-                            <div class="mt-2 text-xs uppercase font-bold text-gray-500 flex items-center justify-end gap-1">
-                                ${statusIcon} ${p.status}
-                            </div>
+                            <p class="text-xl font-bold text-gray-800">R$ ${p.valor_frete.toFixed(2)}</p>
+                            <p class="text-xs text-gray-400 mt-1">${new Date(p.created_at).toLocaleTimeString().substring(0,5)}</p>
                         </div>
                     </div>
                 `;
             });
         }
+
+       function abrirPedido(p) {
+            document.getElementById('d-id').innerText = p.id.substring(0,8);
+            document.getElementById('d-status').innerText = p.status;
+            document.getElementById('d-status').className = 'badge ' + (p.status==='solicitado'?'b-pendente':(p.status==='cancelado'?'b-bloqueado':'b-aprovado'));
+            
+            document.getElementById('d-loja').innerText = p.profiles?.nome_loja || 'Loja';
+            document.getElementById('d-pin').innerText = p.pin_entrega;
+            document.getElementById('d-valor').innerText = "R$ " + p.valor_frete.toFixed(2);
+            document.getElementById('d-pagamento').innerText = p.forma_pagamento;
+            document.getElementById('d-cliente').innerText = p.nome_destinatario || '-';
+            document.getElementById('d-tel').innerText = p.telefone_destinatario || '-';
+            
+            document.getElementById('d-origem').innerText = p.origem;
+            document.getElementById('d-destino').innerText = p.destino;
+            
+            if(p.motoboys?.nome) {
+                document.getElementById('box-entregador').classList.remove('hidden');
+                document.getElementById('d-motoboy').innerText = p.motoboys.nome;
+            } else {
+                document.getElementById('box-entregador').classList.add('hidden');
+            }
+
+            document.getElementById('modal-pedido').classList.remove('hidden');
+        }
+
+        // --- MOTOBOYS ---
+        async function carregarMotoboys() {
+            const tb = document.getElementById('lista-motos');
+            const { data } = await sbClient.from('motoboys').select('*').order('created_at', {ascending:false});
+            tb.innerHTML = '';
+            if(!data) return;
+            
+            data.forEach(m => {
+                let badge = 'b-pendente';
+                let btn = `<button onclick="altStatus('${m.id}','Aprovado')" class="bg-green-600 text-white px-3 py-1 rounded text-xs font-bold hover:bg-green-700">APROVAR</button>`;
+                
+                if(m.status === 'Aprovado') { 
+                    badge = 'b-aprovado'; 
+                    btn = `<button onclick="altStatus('${m.id}','Bloqueado')" class="bg-red-100 text-red-600 border border-red-200 px-3 py-1 rounded text-xs font-bold">BLOQUEAR</button>`;
+                }
+                if(m.status === 'Bloqueado') {
+                    badge = 'b-bloqueado';
+                    btn = `<button onclick="altStatus('${m.id}','Aprovado')" class="bg-blue-100 text-blue-600 border border-blue-200 px-3 py-1 rounded text-xs font-bold">REATIVAR</button>`;
+                }
+
+                tb.innerHTML += `
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="p-4">
+                            <p class="font-bold text-gray-900">${m.nome}</p>
+                            <p class="text-xs text-gray-500">CPF: ${m.cpf || '-'}</p>
+                        </td>
+                        <td class="p-4">
+                            <p class="text-sm text-gray-800">${m.modelo || 'Moto'}</p>
+                            <span class="bg-gray-200 text-gray-700 px-1 rounded font-mono text-xs font-bold">${m.placa || '???'}</span>
+                        </td>
+                        <td class="p-4"><a href="https://wa.me/55${m.whatsapp.replace(/\D/g,'')}" target="_blank" class="text-green-600 hover:underline text-sm"><i class="fab fa-whatsapp"></i> Zap</a></td>
+                        <td class="p-4 text-center"><span class="badge ${badge}">${m.status}</span></td>
+                        <td class="p-4 text-right">${btn}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        async function altStatus(id, st) {
+            if(!confirm(`Mudar status para ${st}?`)) return;
+            await sbClient.from('motoboys').update({ status: st }).eq('id', id);
+            // O realtime atualiza a lista
+        }
+
+        // --- LOJAS & FINANCEIRO ---
+        let lojasCache = [];
+        async function carregarLojas() {
+            const tb = document.getElementById('lista-lojas');
+            // Busca profiles que NÃO são motoboys (funcao != motoboy ou null)
+            // Filtro simples no JS pois SQL 'is not' as vezes varia no Supabase JS
+            const { data } = await sbClient.from('profiles').select('*').order('nome_loja');
+            if(data) {
+                // Filtra quem não tem placa de moto (provavelmente é loja)
+                lojasCache = data.filter(p => !p.placa_moto); 
+                renderLojas(lojasCache);
+            }
+        }
+
+        function renderLojas(lista) {
+            const tb = document.getElementById('lista-lojas');
+            tb.innerHTML = '';
+            lista.forEach(l => {
+                tb.innerHTML += `
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="p-4 font-bold text-gray-800">${l.nome_loja || 'Sem Nome'}</td>
+                        <td class="p-4 text-sm text-gray-600">${l.responsavel || '-'}</td>
+                        <td class="p-4 font-mono font-bold text-blue-700">R$ ${(l.saldo || 0).toFixed(2)}</td>
+                        <td class="p-4 text-right">
+                            <button onclick="modalSaldo('${l.id}', '${l.nome_loja}')" class="bg-green-100 text-green-700 border border-green-200 px-3 py-1 rounded text-xs font-bold hover:bg-green-200">
+                                <i class="fas fa-plus-circle"></i> ADD SALDO
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function filtrarLojas() {
+            const termo = document.getElementById('busca-loja').value.toLowerCase();
+            const filt = lojasCache.filter(l => (l.nome_loja || '').toLowerCase().includes(termo));
+            renderLojas(filt);
+        }
+
+        function modalSaldo(id, nome) {
+            document.getElementById('modal-loja-id').value = id;
+            document.getElementById('modal-loja-nome').innerText = nome;
+            document.getElementById('input-saldo').value = '';
+            document.getElementById('modal-saldo').classList.remove('hidden');
+        }
+
+        async function confirmarSaldo() {
+            const id = document.getElementById('modal-loja-id').value;
+            const valor = parseFloat(document.getElementById('input-saldo').value);
+            
+            if(!valor || valor <= 0) return alert("Valor inválido");
+
+            const { data } = await sbClient.from('profiles').select('saldo').eq('id', id).single();
+            const saldoAtual = data.saldo || 0;
+            const novoSaldo = saldoAtual + valor;
+
+            const { error } = await sbClient.from('profiles').update({ saldo: novoSaldo }).eq('id', id);
+            
+            if(error) alert("Erro: " + error.message);
+            else {
+                alert("Saldo adicionado!");
+                document.getElementById('modal-saldo').classList.add('hidden');
+                // Realtime atualiza a lista
+            }
+        }
+
     </script>
 </body>
-</html>                                                                                        </html>
-                                                                                                          
+</html>
