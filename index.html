@@ -10,34 +10,20 @@
     
     <style>
         body { font-family: 'Segoe UI', sans-serif; background-color: #f3f4f6; }
-        
-        /* Layout */
         .sidebar { width: 260px; height: 100vh; background: #111827; color: white; position: fixed; left: 0; top: 0; display: flex; flex-direction: column; z-index: 50; }
         .content { margin-left: 260px; padding: 30px; transition: 0.3s; }
-        
-        /* Nav */
         .nav-item { padding: 16px 24px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 12px; color: #9CA3AF; font-size: 14px; font-weight: 500; }
         .nav-item:hover, .nav-item.active { background: #1F2937; color: #FBBF24; border-right: 3px solid #FBBF24; }
-        
-        /* Badges */
         .badge { padding: 4px 10px; border-radius: 99px; font-size: 11px; font-weight: 800; text-transform: uppercase; }
         .b-pendente { background: #FEF3C7; color: #D97706; }
         .b-aprovado { background: #D1FAE5; color: #059669; }
         .b-bloqueado { background: #FEE2E2; color: #DC2626; }
-        
-        /* Pedidos Colors */
         .st-solicitado { border-left: 4px solid #FBBF24; background: #FFFBEB; }
         .st-em_rota { border-left: 4px solid #3B82F6; background: #EFF6FF; }
         .st-concluido { border-left: 4px solid #10B981; background: #ECFDF5; }
         .st-cancelado { border-left: 4px solid #EF4444; background: #FEF2F2; opacity: 0.7; }
-
         .modal-bg { background-color: rgba(0,0,0,0.5); }
-        
-        @media (max-width: 768px) {
-            .sidebar { width: 70px; }
-            .sidebar span, .logo-text { display: none; }
-            .content { margin-left: 70px; padding: 15px; }
-        }
+        @media (max-width: 768px) { .sidebar { width: 70px; } .sidebar span, .logo-text { display: none; } .content { margin-left: 70px; padding: 15px; } }
     </style>
 </head>
 <body>
@@ -53,95 +39,46 @@
     </div>
 
     <div id="app-screen" class="hidden">
-        
         <div class="sidebar">
             <div class="p-6 border-b border-gray-800 flex items-center gap-3">
                 <div class="bg-yellow-500 p-2 rounded-lg text-black"><i class="fas fa-cube"></i></div>
                 <span class="font-bold text-lg tracking-wide logo-text">DROP <span class="text-yellow-500">ADMIN</span></span>
             </div>
-            
             <div class="flex-1 py-6 space-y-1">
                 <div class="nav-item active" onclick="nav('dash', this); carregarDash()"><i class="fas fa-chart-pie"></i> <span>Dashboard</span></div>
                 <div class="nav-item" onclick="nav('pedidos', this); carregarPedidos()"><i class="fas fa-receipt"></i> <span>Pedidos (Live)</span></div>
                 <div class="nav-item" onclick="nav('motoboys', this); carregarMotoboys()"><i class="fas fa-motorcycle"></i> <span>Entregadores</span></div>
                 <div class="nav-item" onclick="nav('lojas', this); carregarLojas()"><i class="fas fa-store"></i> <span>Lojas & Saldo</span></div>
             </div>
-            
-            <div class="p-4 border-t border-gray-800">
-                <div class="nav-item text-red-400 hover:bg-gray-800" onclick="logout()"><i class="fas fa-sign-out-alt"></i> <span>Sair</span></div>
-            </div>
+            <div class="p-4 border-t border-gray-800"><div class="nav-item text-red-400 hover:bg-gray-800" onclick="logout()"><i class="fas fa-sign-out-alt"></i> <span>Sair</span></div></div>
         </div>
 
         <div class="content">
-            
             <div id="view-dash" class="fade-in">
                 <h1 class="text-2xl font-bold text-gray-800 mb-6">Visão Geral <span class="text-xs font-normal bg-green-100 text-green-700 px-2 py-1 rounded ml-2"><i class="fas fa-wifi text-[8px]"></i> Online</span></h1>
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                    <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-blue-500">
-                        <p class="text-gray-400 text-xs font-bold uppercase">Faturamento (Hoje)</p>
-                        <h2 class="text-3xl font-bold text-gray-800 mt-1" id="dash-fatur-hoje">R$ 0,00</h2>
-                    </div>
-                    <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-yellow-500">
-                        <p class="text-gray-400 text-xs font-bold uppercase">Aprovação Pendente</p>
-                        <h2 class="text-3xl font-bold text-gray-800 mt-1" id="dash-pendentes">0</h2>
-                    </div>
-                    <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-green-500">
-                        <p class="text-gray-400 text-xs font-bold uppercase">Corridas Ativas</p>
-                        <h2 class="text-3xl font-bold text-gray-800 mt-1" id="dash-ativas">0</h2>
-                    </div>
-                    <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-purple-500">
-                        <p class="text-gray-400 text-xs font-bold uppercase">Total Lojas</p>
-                        <h2 class="text-3xl font-bold text-gray-800 mt-1" id="dash-lojas">0</h2>
-                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-blue-500"><p class="text-gray-400 text-xs font-bold uppercase">Faturamento (Hoje)</p><h2 class="text-3xl font-bold text-gray-800 mt-1" id="dash-fatur-hoje">R$ 0,00</h2></div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-yellow-500"><p class="text-gray-400 text-xs font-bold uppercase">Aprovação Pendente</p><h2 class="text-3xl font-bold text-gray-800 mt-1" id="dash-pendentes">0</h2></div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-green-500"><p class="text-gray-400 text-xs font-bold uppercase">Corridas Ativas</p><h2 class="text-3xl font-bold text-gray-800 mt-1" id="dash-ativas">0</h2></div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-purple-500"><p class="text-gray-400 text-xs font-bold uppercase">Total Lojas</p><h2 class="text-3xl font-bold text-gray-800 mt-1" id="dash-lojas">0</h2></div>
                 </div>
             </div>
 
             <div id="view-pedidos" class="hidden fade-in">
-                <div class="flex justify-between items-center mb-6">
-                    <h1 class="text-2xl font-bold text-gray-800">Monitor de Pedidos</h1>
-                    <button onclick="carregarPedidos()" class="text-blue-600 hover:underline text-sm"><i class="fas fa-sync"></i> Atualizar</button>
-                </div>
+                <div class="flex justify-between items-center mb-6"><h1 class="text-2xl font-bold text-gray-800">Monitor de Pedidos</h1><button onclick="carregarPedidos()" class="text-blue-600 hover:underline text-sm"><i class="fas fa-sync"></i> Atualizar</button></div>
                 <div id="lista-pedidos" class="space-y-3"></div>
             </div>
 
             <div id="view-motoboys" class="hidden fade-in">
                 <h1 class="text-2xl font-bold text-gray-800 mb-6">Gestão de Entregadores</h1>
-                <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-                    <table class="w-full text-left">
-                        <thead class="bg-gray-50 border-b border-gray-200 text-xs text-gray-500 uppercase">
-                            <tr>
-                                <th class="p-4">Nome / CPF</th>
-                                <th class="p-4">Veículo</th>
-                                <th class="p-4">Contato</th>
-                                <th class="p-4 text-center">Status</th>
-                                <th class="p-4 text-right">Ação</th>
-                            </tr>
-                        </thead>
-                        <tbody id="lista-motos" class="text-sm text-gray-700"></tbody>
-                    </table>
-                </div>
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden"><table class="w-full text-left"><thead class="bg-gray-50 border-b border-gray-200 text-xs text-gray-500 uppercase"><tr><th class="p-4">Nome / CPF</th><th class="p-4">Veículo</th><th class="p-4">Contato</th><th class="p-4 text-center">Status</th><th class="p-4 text-right">Ação</th></tr></thead><tbody id="lista-motos" class="text-sm text-gray-700"></tbody></table></div>
             </div>
 
             <div id="view-lojas" class="hidden fade-in">
                 <h1 class="text-2xl font-bold text-gray-800 mb-6">Lojas e Financeiro</h1>
-                <div class="mb-4">
-                    <input type="text" id="busca-loja" onkeyup="filtrarLojas()" placeholder="Buscar loja por nome..." class="w-full p-3 border rounded-lg bg-white shadow-sm">
-                </div>
-                <div class="bg-white rounded-xl shadow-sm overflow-hidden">
-                    <table class="w-full text-left">
-                        <thead class="bg-gray-50 border-b border-gray-200 text-xs text-gray-500 uppercase">
-                            <tr>
-                                <th class="p-4">Loja</th>
-                                <th class="p-4">Responsável</th>
-                                <th class="p-4">Saldo Atual</th>
-                                <th class="p-4 text-right">Gerenciar</th>
-                            </tr>
-                        </thead>
-                        <tbody id="lista-lojas" class="text-sm text-gray-700"></tbody>
-                    </table>
-                </div>
+                <div class="mb-4"><input type="text" id="busca-loja" onkeyup="filtrarLojas()" placeholder="Buscar loja por nome..." class="w-full p-3 border rounded-lg bg-white shadow-sm"></div>
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden"><table class="w-full text-left"><thead class="bg-gray-50 border-b border-gray-200 text-xs text-gray-500 uppercase"><tr><th class="p-4">Loja</th><th class="p-4">Responsável</th><th class="p-4">Saldo Atual</th><th class="p-4 text-right">Gerenciar</th></tr></thead><tbody id="lista-lojas" class="text-sm text-gray-700"></tbody></table></div>
             </div>
-
         </div>
     </div>
 
@@ -162,64 +99,22 @@
         <div class="bg-white w-full max-w-lg rounded-xl shadow-2xl overflow-hidden animate-fade-in relative">
             <button onclick="document.getElementById('modal-pedido').classList.add('hidden')" class="absolute top-3 right-3 text-gray-400 hover:text-red-500 text-2xl">&times;</button>
             <div class="bg-gray-50 p-6 border-b">
-                <div class="flex justify-between items-center">
-                    <h3 class="text-xl font-bold text-gray-800">Pedido #<span id="d-id">...</span></h3>
-                    <span id="d-status" class="badge">...</span>
-                </div>
+                <div class="flex justify-between items-center"><h3 class="text-xl font-bold text-gray-800">Pedido <span id="d-id">...</span></h3><span id="d-status" class="badge">...</span></div>
                 <p id="d-loja" class="text-sm text-gray-500 mt-1">Loja...</p>
             </div>
             <div class="p-6 space-y-4">
-                <div class="flex justify-between bg-blue-50 p-4 rounded-lg">
-                    <div>
-                        <p class="text-xs text-blue-500 font-bold uppercase">PIN de Entrega</p>
-                        <p id="d-pin" class="text-3xl font-mono font-bold text-blue-800 tracking-widest">0000</p>
-                    </div>
-                    <div class="text-right">
-                        <p class="text-xs text-blue-500 font-bold uppercase">Valor Frete</p>
-                        <p id="d-valor" class="text-2xl font-bold text-blue-800">R$ 0,00</p>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <p class="text-xs text-gray-400 font-bold uppercase">Pagamento</p>
-                        <p id="d-pagamento" class="font-bold text-gray-800">...</p>
-                    </div>
-                    <div>
-                        <p class="text-xs text-gray-400 font-bold uppercase">Destinatário</p>
-                        <p id="d-cliente" class="font-bold text-gray-800">...</p>
-                        <p id="d-tel" class="text-xs text-gray-500">...</p>
-                    </div>
-                </div>
-
-                <div class="border-t pt-4">
-                    <div class="flex items-center gap-3">
-                        <div class="w-2 h-2 rounded-full bg-blue-500"></div>
-                        <p id="d-origem" class="text-sm text-gray-600 truncate">...</p>
-                    </div>
-                    <div class="h-4 border-l ml-1 border-gray-300"></div>
-                    <div class="flex items-center gap-3">
-                        <div class="w-2 h-2 rounded-full bg-yellow-500"></div>
-                        <p id="d-destino" class="text-sm text-gray-600 truncate">...</p>
-                    </div>
-                </div>
-                
-                <div id="box-entregador" class="bg-gray-100 p-3 rounded-lg hidden">
-                    <p class="text-xs text-gray-500 font-bold uppercase mb-1">Entregador</p>
-                    <p id="d-motoboy" class="font-bold text-gray-800">...</p>
-                </div>
+                <div class="flex justify-between bg-blue-50 p-4 rounded-lg"><div><p class="text-xs text-blue-500 font-bold uppercase">PIN de Entrega</p><p id="d-pin" class="text-3xl font-mono font-bold text-blue-800 tracking-widest">0000</p></div><div class="text-right"><p class="text-xs text-blue-500 font-bold uppercase">Valor Frete</p><p id="d-valor" class="text-2xl font-bold text-blue-800">R$ 0,00</p></div></div>
+                <div class="grid grid-cols-2 gap-4"><div><p class="text-xs text-gray-400 font-bold uppercase">Pagamento</p><p id="d-pagamento" class="font-bold text-gray-800">...</p></div><div><p class="text-xs text-gray-400 font-bold uppercase">Destinatário</p><p id="d-cliente" class="font-bold text-gray-800">...</p><p id="d-tel" class="text-xs text-gray-500">...</p></div></div>
+                <div class="border-t pt-4"><div class="flex items-center gap-3"><div class="w-2 h-2 rounded-full bg-blue-500"></div><p id="d-origem" class="text-sm text-gray-600 truncate">...</p></div><div class="h-4 border-l ml-1 border-gray-300"></div><div class="flex items-center gap-3"><div class="w-2 h-2 rounded-full bg-yellow-500"></div><p id="d-destino" class="text-sm text-gray-600 truncate">...</p></div></div>
+                <div id="box-entregador" class="bg-gray-100 p-3 rounded-lg hidden"><p class="text-xs text-gray-500 font-bold uppercase mb-1">Entregador</p><p id="d-motoboy" class="font-bold text-gray-800">...</p></div>
             </div>
         </div>
     </div>
 
     <script>
-        // --- CONFIGURAÇÃO ---
-        // ATUALIZADO CONFORME SOLICITADO
         const SUPABASE_URL = 'https://ofpnnijkhgsjarixoyhg.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9mcG5uaWpraGdzamFyaXhveWhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwNjUyNzYsImV4cCI6MjA4MDY0MTI3Nn0.dNOIIETmTz3l1HvhuT-ihAiymJqiaYZnklzzBzDGCFU';
         const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-        // --- SISTEMA ---
 
         async function loginAdmin() {
             const email = document.getElementById('adm-email').value;
@@ -241,7 +136,6 @@
             document.getElementById('app-screen').classList.remove('hidden');
             carregarDash();
             
-            // Realtime Global
             sbClient.channel('admin-chan')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos' }, () => { carregarDash(); if(isVisible('pedidos')) carregarPedidos(); })
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'motoboys' }, () => { carregarDash(); if(isVisible('motoboys')) carregarMotoboys(); })
@@ -258,37 +152,23 @@
             el.classList.add('active');
         }
 
-        // --- DASHBOARD ---
         async function carregarDash() {
-            // Pendentes
             const { count: pend } = await sbClient.from('motoboys').select('*', { count: 'exact', head: true }).eq('status', 'Pendente');
             document.getElementById('dash-pendentes').innerText = pend || 0;
-            
-            // Ativas
             const { count: ativas } = await sbClient.from('pedidos').select('*', { count: 'exact', head: true }).or('status.eq.solicitado,status.eq.em_rota');
             document.getElementById('dash-ativas').innerText = ativas || 0;
-
-            // Faturamento Hoje
             const hoje = new Date().toISOString().split('T')[0];
             const { data: peds } = await sbClient.from('pedidos').select('valor_frete').eq('status', 'concluido').gte('created_at', hoje + 'T00:00:00');
             const total = peds ? peds.reduce((acc, cur) => acc + (cur.valor_frete || 0), 0) : 0;
             document.getElementById('dash-fatur-hoje').innerText = `R$ ${total.toFixed(2)}`;
-
-            // Total Lojas
-            const { count: lojas } = await sbClient.from('profiles').select('*', { count: 'exact', head: true }).is('funcao', null);
+            const { count: lojas } = await sbClient.from('profiles').select('*', { count: 'exact', head: true }).not('nome_loja', 'is', null);
             document.getElementById('dash-lojas').innerText = lojas || 0;
         }
 
-        // --- PEDIDOS ---
         async function carregarPedidos() {
             const div = document.getElementById('lista-pedidos');
             div.innerHTML = '<p class="text-center text-gray-400">Carregando...</p>';
-            
-            // Correção: Garantindo o relacionamento com motoboys (entregador_id)
-            const { data } = await sbClient.from('pedidos')
-                .select('*, profiles(nome_loja), motoboys(nome)')
-                .order('created_at', { ascending: false }).limit(50);
-            
+            const { data } = await sbClient.from('pedidos').select('*, profiles(nome_loja), motoboys(nome)').order('created_at', { ascending: false }).limit(50);
             div.innerHTML = '';
             if(!data || data.length === 0) return div.innerHTML = '<p class="text-center text-gray-400">Sem pedidos.</p>';
 
@@ -300,159 +180,99 @@
                 if(p.status === 'cancelado') stClass = 'st-cancelado';
 
                 const loja = p.profiles?.nome_loja || 'Loja Desconhecida';
-                // Verifica se veio o objeto motoboys pelo relacionamento
                 const moto = p.motoboys?.nome ? `<i class="fas fa-motorcycle text-xs"></i> ${p.motoboys.nome}` : '<span class="text-gray-400 text-xs">Aguardando...</span>';
+                const idVis = p.codigo_visual || '#'+p.id.substring(0,5);
 
                 div.innerHTML += `
                     <div onclick='abrirPedido(${JSON.stringify(p).replace(/'/g, "")})' class="bg-white p-4 rounded-lg shadow-sm flex justify-between items-center cursor-pointer hover:shadow-md transition ${stClass}">
                         <div>
-                            <div class="flex items-center gap-2 mb-1">
-                                <span class="text-xs font-bold text-gray-500">#${p.id.substring(0,6)}</span>
-                                <span class="text-xs font-bold uppercase bg-gray-100 px-2 rounded text-gray-600">${p.status}</span>
-                            </div>
-                            <p class="font-bold text-gray-800">${loja}</p>
-                            <p class="text-sm text-gray-500">${moto}</p>
+                            <div class="flex items-center gap-2 mb-1"><span class="text-xs font-bold text-gray-500">${idVis}</span><span class="text-xs font-bold uppercase bg-gray-100 px-2 rounded text-gray-600">${p.status}</span></div>
+                            <p class="font-bold text-gray-800">${loja}</p><p class="text-sm text-gray-500">${moto}</p>
                         </div>
-                        <div class="text-right">
-                            <p class="text-xl font-bold text-gray-800">R$ ${p.valor_frete.toFixed(2)}</p>
-                            <p class="text-xs text-gray-400 mt-1">${new Date(p.created_at).toLocaleTimeString().substring(0,5)}</p>
-                        </div>
-                    </div>
-                `;
+                        <div class="text-right"><p class="text-xl font-bold text-gray-800">R$ ${p.valor_frete.toFixed(2)}</p><p class="text-xs text-gray-400 mt-1">${new Date(p.created_at).toLocaleTimeString().substring(0,5)}</p></div>
+                    </div>`;
             });
         }
 
-      function abrirPedido(p) {
-            document.getElementById('d-id').innerText = p.id.substring(0,8);
+        function abrirPedido(p) {
+            document.getElementById('d-id').innerText = p.codigo_visual || '#'+p.id.substring(0,5);
             document.getElementById('d-status').innerText = p.status;
             document.getElementById('d-status').className = 'badge ' + (p.status==='solicitado'?'b-pendente':(p.status==='cancelado'?'b-bloqueado':'b-aprovado'));
-            
             document.getElementById('d-loja').innerText = p.profiles?.nome_loja || 'Loja';
             document.getElementById('d-pin').innerText = p.pin_entrega;
             document.getElementById('d-valor').innerText = "R$ " + p.valor_frete.toFixed(2);
             document.getElementById('d-pagamento').innerText = p.forma_pagamento;
             document.getElementById('d-cliente').innerText = p.nome_destinatario || '-';
             document.getElementById('d-tel').innerText = p.telefone_destinatario || '-';
-            
             document.getElementById('d-origem').innerText = p.origem;
             document.getElementById('d-destino').innerText = p.destino;
             
             if(p.motoboys?.nome) {
                 document.getElementById('box-entregador').classList.remove('hidden');
                 document.getElementById('d-motoboy').innerText = p.motoboys.nome;
-            } else {
-                document.getElementById('box-entregador').classList.add('hidden');
-            }
-
+            } else { document.getElementById('box-entregador').classList.add('hidden'); }
             document.getElementById('modal-pedido').classList.remove('hidden');
         }
 
-        // --- MOTOBOYS ---
         async function carregarMotoboys() {
             const tb = document.getElementById('lista-motos');
             const { data } = await sbClient.from('motoboys').select('*').order('created_at', {ascending:false});
             tb.innerHTML = '';
             if(!data) return;
-            
             data.forEach(m => {
-                let badge = 'b-pendente';
-                let btn = `<button onclick="altStatus('${m.id}','Aprovado')" class="bg-green-600 text-white px-3 py-1 rounded text-xs font-bold hover:bg-green-700">APROVAR</button>`;
-                
-                if(m.status === 'Aprovado') { 
-                    badge = 'b-aprovado'; 
-                    btn = `<button onclick="altStatus('${m.id}','Bloqueado')" class="bg-red-100 text-red-600 border border-red-200 px-3 py-1 rounded text-xs font-bold">BLOQUEAR</button>`;
-                }
-                if(m.status === 'Bloqueado') {
-                    badge = 'b-bloqueado';
-                    btn = `<button onclick="altStatus('${m.id}','Aprovado')" class="bg-blue-100 text-blue-600 border border-blue-200 px-3 py-1 rounded text-xs font-bold">REATIVAR</button>`;
-                }
-
-                tb.innerHTML += `
-                    <tr class="border-b hover:bg-gray-50">
-                        <td class="p-4">
-                            <p class="font-bold text-gray-900">${m.nome}</p>
-                            <p class="text-xs text-gray-500">CPF: ${m.cpf || '-'}</p>
-                        </td>
-                        <td class="p-4">
-                            <p class="text-sm text-gray-800">${m.modelo || 'Moto'}</p>
-                            <span class="bg-gray-200 text-gray-700 px-1 rounded font-mono text-xs font-bold">${m.placa || '???'}</span>
-                        </td>
-                        <td class="p-4"><a href="https://wa.me/55${m.whatsapp.replace(/\D/g,'')}" target="_blank" class="text-green-600 hover:underline text-sm"><i class="fab fa-whatsapp"></i> Zap</a></td>
-                        <td class="p-4 text-center"><span class="badge ${badge}">${m.status}</span></td>
-                        <td class="p-4 text-right">${btn}</td>
-                    </tr>
-                `;
+                let badge = 'b-pendente', btn = `<button onclick="altStatus('${m.id}','Aprovado')" class="bg-green-600 text-white px-3 py-1 rounded text-xs font-bold hover:bg-green-700">APROVAR</button>`;
+                if(m.status === 'Aprovado') { badge = 'b-aprovado'; btn = `<button onclick="altStatus('${m.id}','Bloqueado')" class="bg-red-100 text-red-600 border border-red-200 px-3 py-1 rounded text-xs font-bold">BLOQUEAR</button>`; }
+                if(m.status === 'Bloqueado') { badge = 'b-bloqueado'; btn = `<button onclick="altStatus('${m.id}','Aprovado')" class="bg-blue-100 text-blue-600 border border-blue-200 px-3 py-1 rounded text-xs font-bold">REATIVAR</button>`; }
+                tb.innerHTML += `<tr class="border-b hover:bg-gray-50"><td class="p-4"><p class="font-bold text-gray-900">${m.nome}</p><p class="text-xs text-gray-500">CPF: ${m.cpf || '-'}</p></td><td class="p-4"><p class="text-sm text-gray-800">${m.modelo || 'Moto'}</p><span class="bg-gray-200 text-gray-700 px-1 rounded font-mono text-xs font-bold">${m.placa || '???'}</span></td><td class="p-4"><a href="https://wa.me/55${m.whatsapp.replace(/\D/g,'')}" target="_blank" class="text-green-600 hover:underline text-sm"><i class="fab fa-whatsapp"></i> Zap</a></td><td class="p-4 text-center"><span class="badge ${badge}">${m.status}</span></td><td class="p-4 text-right">${btn}</td></tr>`;
             });
         }
 
-        async function altStatus(id, st) {
-            if(!confirm(`Mudar status para ${st}?`)) return;
-            await sbClient.from('motoboys').update({ status: st }).eq('id', id);
-        }
+        async function altStatus(id, st) { if(!confirm(`Mudar status para ${st}?`)) return; await sbClient.from('motoboys').update({ status: st }).eq('id', id); }
 
-        // --- LOJAS & FINANCEIRO ---
         let lojasCache = [];
         async function carregarLojas() {
             const tb = document.getElementById('lista-lojas');
-            const { data } = await sbClient.from('profiles').select('*').order('nome_loja');
-            if(data) {
-                // Filtra quem não tem placa de moto (provavelmente é loja)
-                lojasCache = data.filter(p => !p.placa_moto); 
-                renderLojas(lojasCache);
-            }
+            const { data } = await sbClient.from('profiles').select('*').not('nome_loja', 'is', null).order('nome_loja');
+            if(data) { lojasCache = data; renderLojas(lojasCache); }
         }
 
         function renderLojas(lista) {
             const tb = document.getElementById('lista-lojas');
             tb.innerHTML = '';
             lista.forEach(l => {
-                tb.innerHTML += `
-                    <tr class="border-b hover:bg-gray-50">
-                        <td class="p-4 font-bold text-gray-800">${l.nome_loja || 'Sem Nome'}</td>
-                        <td class="p-4 text-sm text-gray-600">${l.responsavel || '-'}</td>
-                        <td class="p-4 font-mono font-bold text-blue-700">R$ ${(l.saldo || 0).toFixed(2)}</td>
-                        <td class="p-4 text-right">
-                            <button onclick="modalSaldo('${l.id}', '${l.nome_loja}')" class="bg-green-100 text-green-700 border border-green-200 px-3 py-1 rounded text-xs font-bold hover:bg-green-200">
-                                <i class="fas fa-plus-circle"></i> ADD SALDO
-                            </button>
-                        </td>
-                    </tr>
-                `;
+                tb.innerHTML += `<tr class="border-b hover:bg-gray-50"><td class="p-4 font-bold text-gray-800">${l.nome_loja}</td><td class="p-4 text-sm text-gray-600">${l.responsavel || '-'}</td><td class="p-4 font-mono font-bold text-blue-700">R$ ${(l.saldo || 0).toFixed(2)}</td><td class="p-4 text-right"><button onclick="modalSaldo('${l.id}', '${l.nome_loja}')" class="bg-green-100 text-green-700 border border-green-200 px-3 py-1 rounded text-xs font-bold hover:bg-green-200"><i class="fas fa-plus-circle"></i> ADD SALDO</button></td></tr>`;
             });
         }
 
-        function filtrarLojas() {
-            const termo = document.getElementById('busca-loja').value.toLowerCase();
-            const filt = lojasCache.filter(l => (l.nome_loja || '').toLowerCase().includes(termo));
-            renderLojas(filt);
-        }
-
-        function modalSaldo(id, nome) {
-            document.getElementById('modal-loja-id').value = id;
-            document.getElementById('modal-loja-nome').innerText = nome;
-            document.getElementById('input-saldo').value = '';
-            document.getElementById('modal-saldo').classList.remove('hidden');
-        }
+        function filtrarLojas() { const termo = document.getElementById('busca-loja').value.toLowerCase(); const filt = lojasCache.filter(l => (l.nome_loja || '').toLowerCase().includes(termo)); renderLojas(filt); }
+        function modalSaldo(id, nome) { document.getElementById('modal-loja-id').value = id; document.getElementById('modal-loja-nome').innerText = nome; document.getElementById('input-saldo').value = ''; document.getElementById('modal-saldo').classList.remove('hidden'); }
 
         async function confirmarSaldo() {
             const id = document.getElementById('modal-loja-id').value;
             const valor = parseFloat(document.getElementById('input-saldo').value);
-            
             if(!valor || valor <= 0) return alert("Valor inválido");
 
             const { data } = await sbClient.from('profiles').select('saldo').eq('id', id).single();
-            const saldoAtual = data.saldo || 0;
-            const novoSaldo = saldoAtual + valor;
+            const novoSaldo = (data.saldo || 0) + valor;
 
+            // 1. Atualiza Saldo
             const { error } = await sbClient.from('profiles').update({ saldo: novoSaldo }).eq('id', id);
             
-            if(error) alert("Erro: " + error.message);
-            else {
-                alert("Saldo adicionado!");
+            // 2. Registra Transação para o Extrato
+            if(!error) {
+                await sbClient.from('transacoes').insert([{
+                    user_id: id,
+                    tipo: 'credito',
+                    valor: valor,
+                    descricao: 'Recarga via Admin'
+                }]);
+                alert("Saldo adicionado e registrado no extrato!");
                 document.getElementById('modal-saldo').classList.add('hidden');
+                carregarLojas();
+            } else {
+                alert("Erro: " + error.message);
             }
         }
-
     </script>
 </body>
 </html>
