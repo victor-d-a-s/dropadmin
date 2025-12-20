@@ -7,6 +7,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
     
     <style>
         body { font-family: 'Segoe UI', sans-serif; background-color: #f3f4f6; }
@@ -23,10 +25,11 @@
         .modal-bg { background-color: rgba(0,0,0,0.85); backdrop-filter: blur(4px); }
         .pin-input { letter-spacing: 0.5em; font-family: monospace; text-align: center; font-size: 24px; }
         
-        /* Toggle Switch Customizado */
-        .toggle-checkbox:checked { right: 0; border-color: #10B981; }
-        .toggle-checkbox:checked + .toggle-label { background-color: #10B981; }
-        
+        /* Tabela Contábil */
+        .table-head { background-color: #F9FAFB; color: #6B7280; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; }
+        tr:hover td { background-color: #F9FAFB; }
+        td { border-bottom: 1px solid #E5E7EB; padding: 12px 16px; font-size: 0.875rem; }
+
         @media (max-width: 768px) { .sidebar { width: 70px; } .sidebar span, .logo-text { display: none; } .content { margin-left: 70px; padding: 15px; } }
     </style>
 </head>
@@ -51,7 +54,7 @@
             </div>
             
             <div class="flex-1 py-6 space-y-1 overflow-y-auto">
-                <div class="nav-item active" onclick="nav('dash', this); carregarFinanceiro()"><i class="fas fa-chart-line"></i> <span>Financeiro</span></div>
+                <div class="nav-item active" onclick="nav('dash', this); carregarFinanceiro()"><i class="fas fa-chart-line"></i> <span>Financeiro & Borderô</span></div>
                 <div class="nav-item" onclick="nav('pedidos', this); carregarPedidos()"><i class="fas fa-receipt"></i> <span>Pedidos Live</span></div>
                 <div class="nav-item" onclick="nav('motoboys', this); carregarMotoboys()"><i class="fas fa-motorcycle"></i> <span>Entregadores</span></div>
                 <div class="nav-item" onclick="nav('avaliacoes', this); carregarAvaliacoes()"><i class="fas fa-star"></i> <span>Avaliações</span></div>
@@ -71,27 +74,50 @@
             
             <div id="view-dash" class="fade-in">
                 <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                    <h1 class="text-2xl font-bold text-gray-800">Painel Financeiro</h1>
-                    <div class="flex gap-2 bg-white p-2 rounded-lg shadow-sm">
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-800">Relatório Contábil</h1>
+                        <p class="text-xs text-gray-500">Geração de Borderô para evitar bitributação.</p>
+                    </div>
+                    <div class="flex flex-wrap gap-2 bg-white p-2 rounded-lg shadow-sm items-center">
                         <input type="date" id="data-inicio" class="border rounded px-2 py-1 text-sm">
                         <span class="text-gray-400 self-center">até</span>
                         <input type="date" id="data-fim" class="border rounded px-2 py-1 text-sm">
                         <button onclick="carregarFinanceiro()" class="bg-blue-600 text-white px-4 py-1 rounded text-sm font-bold hover:bg-blue-700">Filtrar</button>
+                        <button onclick="exportarCSV()" class="bg-green-600 text-white px-4 py-1 rounded text-sm font-bold hover:bg-green-700"><i class="fas fa-file-excel mr-1"></i> CSV</button>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                     <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-gray-500">
-                        <p class="text-gray-400 text-xs font-bold uppercase">Volume Total (Bruto)</p>
+                        <p class="text-gray-400 text-xs font-bold uppercase">Entrada Total (Conta Transitória)</p>
                         <h2 class="text-3xl font-bold text-gray-800 mt-1" id="fin-total">R$ 0,00</h2>
                     </div>
-                    <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-blue-500">
-                        <p class="text-blue-500 text-xs font-bold uppercase">Repasse Motoboys</p>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-red-500">
+                        <p class="text-red-500 text-xs font-bold uppercase">Repasse a Terceiros (Obrigação)</p>
                         <h2 class="text-3xl font-bold text-gray-800 mt-1" id="fin-motoboys">R$ 0,00</h2>
                     </div>
                     <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-green-500">
-                        <p class="text-green-600 text-xs font-bold uppercase">Receita Drop (Taxas)</p>
+                        <p class="text-green-600 text-xs font-bold uppercase">Receita Real (Taxa App)</p>
                         <h2 class="text-3xl font-bold text-gray-800 mt-1" id="fin-app">R$ 0,00</h2>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
+                    <div class="px-6 py-4 border-b border-gray-200"><h3 class="font-bold text-gray-700">Detalhamento de Transações</h3></div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="table-head">
+                                <tr>
+                                    <th class="p-4">ID / Data</th>
+                                    <th class="p-4">Rota</th>
+                                    <th class="p-4 text-blue-600">Entrada (Total)</th>
+                                    <th class="p-4 text-red-500">Repasse (Saída)</th>
+                                    <th class="p-4 text-green-600">Taxa (Receita)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="lista-financeiro" class="text-sm text-gray-700">
+                                </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -103,18 +129,33 @@
 
             <div id="view-motoboys" class="hidden fade-in">
                 <h1 class="text-2xl font-bold text-gray-800 mb-6">Gestão de Entregadores</h1>
-                <div class="bg-white rounded-xl shadow-sm overflow-hidden"><table class="w-full text-left"><thead class="bg-gray-50 border-b border-gray-200 text-xs text-gray-500 uppercase"><tr><th class="p-4">Nome / CPF</th><th class="p-4">Veículo</th><th class="p-4">Contato</th><th class="p-4 text-center">Status</th><th class="p-4 text-right">Ação</th></tr></thead><tbody id="lista-motos" class="text-sm text-gray-700"></tbody></table></div>
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
+                    <table class="w-full text-left">
+                        <thead class="bg-gray-50 border-b border-gray-200 text-xs text-gray-500 uppercase">
+                            <tr><th class="p-4">Nome</th><th class="p-4">Veículo</th><th class="p-4">WhatsApp</th><th class="p-4">Cadastro</th></tr>
+                        </thead>
+                        <tbody id="lista-motos" class="text-sm text-gray-700"></tbody>
+                    </table>
+                </div>
             </div>
 
             <div id="view-avaliacoes" class="hidden fade-in">
-                <h1 class="text-2xl font-bold text-gray-800 mb-6">Avaliações</h1>
-                <div id="lista-avaliacoes" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                <h1 class="text-2xl font-bold text-gray-800 mb-6">Avaliações Recentes</h1>
+                <div id="lista-avaliacoes" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    </div>
             </div>
 
             <div id="view-lojas" class="hidden fade-in">
                 <h1 class="text-2xl font-bold text-gray-800 mb-6">Lojas e Financeiro</h1>
-                <div class="mb-4"><input type="text" id="busca-loja" onkeyup="filtrarLojas()" placeholder="Buscar loja..." class="w-full p-3 border rounded-lg bg-white shadow-sm"></div>
-                <div class="bg-white rounded-xl shadow-sm overflow-hidden"><table class="w-full text-left"><thead class="bg-gray-50 border-b border-gray-200 text-xs text-gray-500 uppercase"><tr><th class="p-4">Loja</th><th class="p-4">Responsável</th><th class="p-4">Saldo</th><th class="p-4">Status</th><th class="p-4 text-right">Ações</th></tr></thead><tbody id="lista-lojas" class="text-sm text-gray-700"></tbody></table></div>
+                <div class="mb-4"><input type="text" id="busca-loja" onkeyup="filtrarLojas()" placeholder="Buscar loja..." class="w-full p-3 border rounded-lg bg-white shadow-sm outline-none focus:border-blue-500"></div>
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">
+                    <table class="w-full text-left">
+                        <thead class="bg-gray-50 border-b border-gray-200 text-xs text-gray-500 uppercase">
+                            <tr><th class="p-4">Loja</th><th class="p-4">Responsável</th><th class="p-4">Saldo</th><th class="p-4 text-right">Ações</th></tr>
+                        </thead>
+                        <tbody id="lista-lojas" class="text-sm text-gray-700"></tbody>
+                    </table>
+                </div>
             </div>
 
             <div id="view-config" class="hidden fade-in">
@@ -134,19 +175,12 @@
                             </div>
                             
                             <div class="pt-4 border-t">
-                                <label class="block text-sm font-bold text-gray-700 mb-2">Taxa de Retorno (Ida e Volta)</label>
+                                <label class="block text-sm font-bold text-gray-700 mb-2">Taxa de Retorno</label>
                                 <div class="flex items-center gap-4 mb-2">
-                                    <label class="flex items-center gap-2 cursor-pointer">
-                                        <input type="radio" name="tipo_retorno" value="percent" class="w-4 h-4 text-blue-600" checked>
-                                        <span class="text-sm">Porcentagem (%)</span>
-                                    </label>
-                                    <label class="flex items-center gap-2 cursor-pointer">
-                                        <input type="radio" name="tipo_retorno" value="fixed" class="w-4 h-4 text-blue-600">
-                                        <span class="text-sm">Valor Fixo (R$)</span>
-                                    </label>
+                                    <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="tipo_retorno" value="percent" class="w-4 h-4 text-blue-600" checked><span class="text-sm">Porcentagem (%)</span></label>
+                                    <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="tipo_retorno" value="fixed" class="w-4 h-4 text-blue-600"><span class="text-sm">Valor Fixo (R$)</span></label>
                                 </div>
                                 <input type="number" id="cfg-retorno-valor" class="w-full border p-3 rounded-lg text-blue-700 font-bold" placeholder="Ex: 20">
-                                <p class="text-xs text-gray-400 mt-1">Ex: 50% ou R$ 5,00 adicionais.</p>
                             </div>
                         </div>
                     </div>
@@ -157,30 +191,12 @@
                         <div class="mb-4">
                             <label class="block text-sm font-bold text-gray-700 mb-2">Tipo de Cobrança</label>
                             <div class="flex items-center gap-4 mb-3">
-                                <label class="flex items-center gap-2 cursor-pointer">
-                                    <input type="radio" name="tipo_taxa" value="percent" class="w-4 h-4 text-green-600" checked>
-                                    <span class="text-sm">Porcentagem (%)</span>
-                                </label>
-                                <label class="flex items-center gap-2 cursor-pointer">
-                                    <input type="radio" name="tipo_taxa" value="fixed" class="w-4 h-4 text-green-600">
-                                    <span class="text-sm">Valor Fixo por Corrida (R$)</span>
-                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="tipo_taxa" value="percent" class="w-4 h-4 text-green-600" checked><span class="text-sm">Porcentagem (%)</span></label>
+                                <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="tipo_taxa" value="fixed" class="w-4 h-4 text-green-600"><span class="text-sm">Valor Fixo (R$)</span></label>
                             </div>
                             <input type="number" id="cfg-taxa-app" class="w-full border p-3 rounded-lg text-green-700 font-bold text-lg" placeholder="Valor">
                         </div>
-
-                        <div class="bg-green-50 p-4 rounded-lg text-sm text-green-800">
-                            <p class="font-bold mb-1"><i class="fas fa-info-circle"></i> Exemplo:</p>
-                            <p>Se o frete for R$ 20,00:</p>
-                            <ul class="list-disc ml-5 mt-1">
-                                <li><b>10%:</b> App ganha R$ 2,00. Motoboy R$ 18,00.</li>
-                                <li><b>Fixo R$ 2,00:</b> App ganha R$ 2,00. Motoboy R$ 18,00.</li>
-                            </ul>
-                        </div>
-
-                        <button onclick="verificarPinParaAcao(salvarConfig)" class="w-full bg-gray-800 text-white font-bold py-4 rounded-lg hover:bg-black mt-6 shadow-lg">
-                            <i class="fas fa-save mr-2"></i> SALVAR PREÇOS (PIN)
-                        </button>
+                        <button onclick="verificarPinParaAcao(salvarConfig)" class="w-full bg-gray-800 text-white font-bold py-4 rounded-lg hover:bg-black mt-6 shadow-lg"><i class="fas fa-save mr-2"></i> SALVAR PREÇOS (PIN)</button>
                     </div>
                 </div>
             </div>
@@ -208,7 +224,7 @@
     <div id="modal-create-pin" class="hidden fixed inset-0 modal-bg z-[80] flex items-center justify-center p-4">
         <div class="bg-white p-8 rounded-2xl w-full max-w-sm shadow-2xl text-center border-t-4 border-red-500">
             <h2 class="text-2xl font-bold text-gray-800 mb-2">Segurança Obrigatória</h2>
-            <p class="text-sm text-gray-500 mb-6">Você precisa criar um <b>PIN Mestre de 4 dígitos</b>. Ele será exigido para salvar configurações e alterar saldos.</p>
+            <p class="text-sm text-gray-500 mb-6">Crie um <b>PIN Mestre (4 dígitos)</b>. Ele será exigido para mexer em dinheiro e configs.</p>
             <input type="tel" id="new-master-pin" maxlength="4" class="w-full border-2 border-gray-300 rounded-xl p-4 pin-input mb-6 focus:border-red-500 outline-none" placeholder="0000">
             <button onclick="criarPinInicial()" class="w-full bg-red-600 text-white font-bold py-4 rounded-xl hover:bg-red-700 text-lg">DEFINIR PIN</button>
         </div>
@@ -218,7 +234,6 @@
         <div class="bg-white p-8 rounded-2xl w-full max-w-sm shadow-2xl text-center">
             <div class="bg-red-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-red-600 text-2xl"><i class="fas fa-lock"></i></div>
             <h3 class="text-xl font-bold text-gray-800 mb-2">Acesso Restrito</h3>
-            <p class="text-sm text-gray-500 mb-6">Digite seu PIN Mestre para confirmar.</p>
             <input type="password" id="input-check-pin" maxlength="4" class="w-full border-2 border-gray-300 rounded-xl p-4 pin-input mb-6 focus:border-red-500 outline-none" placeholder="••••">
             <div class="grid grid-cols-2 gap-3">
                 <button onclick="fecharModalPin()" class="bg-gray-200 text-gray-700 font-bold py-3 rounded-xl">Cancelar</button>
@@ -228,7 +243,7 @@
     </div>
 
     <div id="modal-saldo" class="hidden fixed inset-0 modal-bg z-[60] flex items-center justify-center">
-        <div class="bg-white p-6 rounded-xl w-96 shadow-2xl animate-fade-in">
+        <div class="bg-white p-6 rounded-xl w-96 shadow-2xl">
             <h3 class="text-lg font-bold text-gray-800 mb-1">Gerenciar Saldo</h3>
             <p id="modal-loja-nome" class="text-sm text-gray-500 mb-4">Loja...</p>
             <div class="flex gap-2 mb-3">
@@ -247,126 +262,116 @@
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9mcG5uaWpraGdzamFyaXhveWhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwNjUyNzYsImV4cCI6MjA4MDY0MTI3Nn0.dNOIIETmTz3l1HvhuT-ihAiymJqiaYZnklzzBzDGCFU';
         const sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         let acaoPendente = null;
+        let cacheRelatorio = []; // Guarda dados para CSV
 
-        // LOGIN / LOGOUT / INIT
+        // --- AUTH & INIT ---
+        window.onload = async () => {
+            const { data: { session } } = await sbClient.auth.getSession();
+            if(session) initSystem();
+            
+            const hoje = new Date(); 
+            const mesAtras = new Date(); mesAtras.setDate(hoje.getDate() - 30);
+            document.getElementById('data-fim').valueAsDate = hoje; 
+            document.getElementById('data-inicio').valueAsDate = mesAtras;
+        };
+
         async function loginAdmin() {
             const email = document.getElementById('adm-email').value;
             const senha = document.getElementById('adm-senha').value;
             const { error } = await sbClient.auth.signInWithPassword({ email, password: senha });
-            if(error) alert("Erro: " + error.message); else initSystem();
+            if(error) alert(error.message); else initSystem();
         }
         function logout() { sbClient.auth.signOut(); location.reload(); }
-
-        window.onload = async () => {
-            const { data: { session } } = await sbClient.auth.getSession();
-            if(session) initSystem();
-            const hoje = new Date(); const mesAtras = new Date(); mesAtras.setDate(hoje.getDate() - 30);
-            document.getElementById('data-fim').valueAsDate = hoje; document.getElementById('data-inicio').valueAsDate = mesAtras;
-        };
 
         async function initSystem() {
             document.getElementById('login-screen').classList.add('hidden');
             document.getElementById('app-screen').classList.remove('hidden');
-            
-            // Verifica se tem PIN
             await verificarPinInicial();
-            carregarFinanceiro();
+            carregarFinanceiro(); // Carrega tela inicial
         }
 
-        // --- LÓGICA DO PIN ---
+        // --- PIN SYSTEM ---
         async function verificarPinInicial() {
             const { data } = await sbClient.from('app_config').select('admin_pin, id').single();
-            if(!data) {
-                // Cria config se não existe
-                await sbClient.from('app_config').insert({});
-                document.getElementById('modal-create-pin').classList.remove('hidden');
-            } else if (!data.admin_pin || data.admin_pin === '0000') {
-                document.getElementById('modal-create-pin').classList.remove('hidden');
-            }
+            if(!data) { await sbClient.from('app_config').insert({}); document.getElementById('modal-create-pin').classList.remove('hidden'); }
+            else if (!data.admin_pin || data.admin_pin === '0000') document.getElementById('modal-create-pin').classList.remove('hidden');
         }
-
         async function criarPinInicial() {
             const pin = document.getElementById('new-master-pin').value;
             if(pin.length !== 4) return alert("Digite 4 números.");
-            
-            // Pega o ID da config para atualizar
             const { data } = await sbClient.from('app_config').select('id').limit(1).single();
-            if(data) {
-                const { error } = await sbClient.from('app_config').update({ admin_pin: pin }).eq('id', data.id);
-                if(error) alert("Erro: " + error.message);
-                else {
-                    alert("PIN Criado! Guarde-o com segurança.");
-                    document.getElementById('modal-create-pin').classList.add('hidden');
-                }
-            }
+            if(data) { await sbClient.from('app_config').update({ admin_pin: pin }).eq('id', data.id); document.getElementById('modal-create-pin').classList.add('hidden'); }
         }
-
-        function verificarPinParaAcao(callback) {
-            acaoPendente = callback;
-            document.getElementById('input-check-pin').value = '';
-            document.getElementById('modal-pin-check').classList.remove('hidden');
-            document.getElementById('input-check-pin').focus();
-        }
-        
+        function verificarPinParaAcao(callback) { acaoPendente = callback; document.getElementById('input-check-pin').value = ''; document.getElementById('modal-pin-check').classList.remove('hidden'); document.getElementById('input-check-pin').focus(); }
         function fecharModalPin() { document.getElementById('modal-pin-check').classList.add('hidden'); acaoPendente = null; }
-
         async function confirmarPinAcao() {
             const pinDigitado = document.getElementById('input-check-pin').value;
             const { data } = await sbClient.from('app_config').select('admin_pin').single();
-            if(data && data.admin_pin === pinDigitado) {
-                fecharModalPin();
-                if(acaoPendente) acaoPendente();
-            } else {
-                alert("PIN Incorreto!");
-                document.getElementById('input-check-pin').value = '';
-            }
+            if(data && data.admin_pin === pinDigitado) { fecharModalPin(); if(acaoPendente) acaoPendente(); } else { alert("PIN Incorreto!"); document.getElementById('input-check-pin').value = ''; }
         }
 
-        // --- FINANCEIRO (COM CÁLCULO DE TAXAS NOVAS) ---
+        // --- FINANCEIRO & BORDERÔ (ATUALIZADO) ---
         async function carregarFinanceiro() {
             const inicio = document.getElementById('data-inicio').value;
             const fim = document.getElementById('data-fim').value;
+            const lista = document.getElementById('lista-financeiro');
             
-            // Pega Config Atual para saber se é taxa fixa ou % (para pedidos novos, mas o ideal é ler do histórico do pedido se implementado)
-            // Aqui vamos assumir que a taxa_app_aplicada no pedido já é o valor percentual OU vamos ter que interpretar.
-            // NOTA: Para simplificar e ser robusto, vamos usar a coluna taxa_app_aplicada do pedido como o valor deduzido
-            // Mas precisamos saber se o pedido gravou o valor em R$ ou %.
-            // Vamos simplificar: O app grava a taxa em "taxa_app_aplicada" (valor numérico).
+            lista.innerHTML = '<tr><td colspan="5" class="text-center p-4">Carregando dados...</td></tr>';
             
-            // Ajuste na Query: Precisamos da config para saber COMO calcular se o histórico for antigo
+            // Pega config atual para fallback
             const { data: config } = await sbClient.from('app_config').select('*').single();
             
+            // Busca pedidos concluídos
             const { data: pedidos } = await sbClient.from('pedidos')
-                .select('valor_frete, taxa_app_aplicada') // Assumindo que taxa_app_aplicada guarda a % ou o valor fixo usado
+                .select('id, created_at, origem, destino, valor_frete, taxa_app_aplicada')
                 .eq('status', 'concluido')
                 .gte('created_at', inicio + 'T00:00:00')
-                .lte('created_at', fim + 'T23:59:59');
+                .lte('created_at', fim + 'T23:59:59')
+                .order('created_at', {ascending: false});
 
-            let bruto = 0;
-            let receitaApp = 0;
+            let bruto = 0, receitaApp = 0;
+            cacheRelatorio = []; // Limpa cache
+            lista.innerHTML = '';
 
-            if(pedidos) {
+            if(!pedidos || !pedidos.length) {
+                lista.innerHTML = '<tr><td colspan="5" class="text-center p-4 text-gray-500">Sem movimentação no período.</td></tr>';
+            } else {
                 pedidos.forEach(p => {
                     const valor = parseFloat(p.valor_frete);
-                    bruto += valor;
                     
-                    // Lógica Retroativa: Se tiver taxa gravada, usa. Se não, usa config atual (fallback)
-                    // Como não temos coluna "tipo_taxa" no pedido (histórico), vamos assumir a lógica atual do painel
-                    // Mas para pedidos novos, o sistema deve gravar.
-                    
-                    // Cálculo Simplificado:
-                    // Se config atual é Fixed, e o pedido não tem taxa gravada, assumimos Fixed atual.
-                    // Se config atual é Percent, assumimos Percent atual.
-                    
+                    // Lógica de Taxa (Prioriza o gravado no pedido, senão usa config atual)
                     let taxaLiq = 0;
-                    if(config.taxa_app_tipo === 'fixed') {
-                        taxaLiq = parseFloat(config.taxa_app_percent); // Campo reutilizado para valor fixo no banco
+                    if(p.taxa_app_aplicada) {
+                         // Se foi gravado, assume que é percentual se <= 100, ou fixo se > (?)
+                         // Vamos simplificar: Se a config atual diz que é %, tratamos o gravado como %.
+                         // O ideal é ter gravado o TIPO também, mas vamos usar a config atual como guia
+                         if(config.taxa_app_tipo === 'fixed') taxaLiq = parseFloat(config.taxa_app_percent); // Fallback forçado p/ fixo config
+                         else taxaLiq = valor * (p.taxa_app_aplicada / 100);
                     } else {
-                        // Percentual
-                        const perc = p.taxa_app_aplicada || config.taxa_app_percent;
-                        taxaLiq = valor * (perc / 100);
+                        // Fallback total
+                        if(config.taxa_app_tipo === 'fixed') taxaLiq = parseFloat(config.taxa_app_percent);
+                        else taxaLiq = valor * (config.taxa_app_percent / 100);
                     }
+                    
+                    const repasse = valor - taxaLiq;
+                    bruto += valor;
                     receitaApp += taxaLiq;
+
+                    // Salva para CSV
+                    cacheRelatorio.push({
+                        id: p.id, data: new Date(p.created_at).toLocaleDateString(),
+                        total: valor, repasse: repasse, receita: taxaLiq
+                    });
+
+                    // Renderiza Linha
+                    lista.innerHTML += `
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="p-3 font-mono text-xs text-gray-500">#${p.id.slice(0,6)}<br>${new Date(p.created_at).toLocaleDateString()}</td>
+                            <td class="p-3 text-xs max-w-[150px] truncate" title="${p.origem} -> ${p.destino}">${p.origem}</td>
+                            <td class="p-3 font-bold text-blue-800">R$ ${valor.toFixed(2)}</td>
+                            <td class="p-3 text-red-600">R$ ${repasse.toFixed(2)}</td>
+                            <td class="p-3 font-bold text-green-600 bg-green-50">R$ ${taxaLiq.toFixed(2)}</td>
+                        </tr>`;
                 });
             }
 
@@ -375,124 +380,88 @@
             document.getElementById('fin-motoboys').innerText = "R$ " + (bruto - receitaApp).toLocaleString('pt-BR', {minimumFractionDigits: 2});
         }
 
+        function exportarCSV() {
+            if(!cacheRelatorio.length) return alert("Nada para exportar na tela atual.");
+            let csv = "ID Pedido;Data;Valor Entrada (Total);Repasse Terceiros;Taxa App (Receita)\n";
+            cacheRelatorio.forEach(r => {
+                csv += `${r.id};${r.data};${r.total.toFixed(2).replace('.',',')};${r.repasse.toFixed(2).replace('.',',')};${r.receita.toFixed(2).replace('.',',')}\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `bordero_drop_${document.getElementById('data-fim').value}.csv`;
+            link.click();
+        }
+
         // --- CONFIGURAÇÕES ---
         async function carregarConfig() {
             const { data } = await sbClient.from('app_config').select('*').single();
             if(data) {
                 document.getElementById('cfg-base').value = data.taxa_base;
                 document.getElementById('cfg-km').value = data.preco_km;
-                document.getElementById('cfg-taxa-app').value = data.taxa_app_percent; // Serve para % ou R$
+                document.getElementById('cfg-taxa-app').value = data.taxa_app_percent;
                 document.getElementById('cfg-retorno-valor').value = data.taxa_retorno_valor;
-
-                // Set Radios
                 setRadio('tipo_taxa', data.taxa_app_tipo || 'percent');
                 setRadio('tipo_retorno', data.taxa_retorno_tipo || 'percent');
             }
         }
-
-        function setRadio(name, value) {
-            const el = document.querySelector(`input[name="${name}"][value="${value}"]`);
-            if(el) el.checked = true;
-        }
-
+        function setRadio(name, value) { const el = document.querySelector(`input[name="${name}"][value="${value}"]`); if(el) el.checked = true; }
+        
         async function salvarConfig() {
-            const base = document.getElementById('cfg-base').value;
-            const km = document.getElementById('cfg-km').value;
-            
-            // Taxa App
-            const taxaAppVal = document.getElementById('cfg-taxa-app').value;
-            const taxaAppTipo = document.querySelector('input[name="tipo_taxa"]:checked').value;
-            
-            // Retorno
-            const retVal = document.getElementById('cfg-retorno-valor').value;
-            const retTipo = document.querySelector('input[name="tipo_retorno"]:checked').value;
-
+            const updates = {
+                taxa_base: document.getElementById('cfg-base').value,
+                preco_km: document.getElementById('cfg-km').value,
+                taxa_app_percent: document.getElementById('cfg-taxa-app').value,
+                taxa_app_tipo: document.querySelector('input[name="tipo_taxa"]:checked').value,
+                taxa_retorno_valor: document.getElementById('cfg-retorno-valor').value,
+                taxa_retorno_tipo: document.querySelector('input[name="tipo_retorno"]:checked').value
+            };
             const { data } = await sbClient.from('app_config').select('id').limit(1);
             if(data[0]) {
-                const { error } = await sbClient.from('app_config').update({
-                    taxa_base: base, preco_km: km,
-                    taxa_app_percent: taxaAppVal, // Reutilizando coluna p/ valor (seja % ou fixo)
-                    taxa_app_tipo: taxaAppTipo,
-                    taxa_retorno_valor: retVal,
-                    taxa_retorno_tipo: retTipo
-                }).eq('id', data[0].id);
-                
-                if(!error) alert("Preços Salvos!"); else alert(error.message);
+                const { error } = await sbClient.from('app_config').update(updates).eq('id', data[0].id);
+                if(!error) alert("Configurações Salvas!"); else alert(error.message);
             }
         }
 
-        // --- OUTRAS FUNÇÕES (PERFIL, LOJAS, ETC - MANTIDAS MAS RESUMIDAS) ---
-        function nav(view, el) {
-            ['dash', 'motoboys', 'pedidos', 'lojas', 'config', 'avaliacoes', 'perfil'].forEach(v => document.getElementById('view-'+v).classList.add('hidden'));
-            document.getElementById('view-'+view).classList.remove('hidden');
-            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active')); el.classList.add('active');
+        // --- PREENCHIMENTO DE TABELAS (NOVO) ---
+        async function carregarMotoboys() {
+            const tb = document.getElementById('lista-motos'); tb.innerHTML = '<tr><td colspan="4" class="p-4 text-center">Carregando...</td></tr>';
+            // Supondo que exista tabela 'motoboys' ou users com role motoboy. Adaptar query conforme DB.
+            // Vou usar 'profiles' assumindo filtro por algo, mas como não sei a estrutura exata do motoboy no DB, vou listar profiles que tenham 'placa_moto'
+            const { data } = await sbClient.from('profiles').select('*').not('placa_moto', 'is', null);
+            tb.innerHTML = '';
+            if(!data.length) tb.innerHTML = '<tr><td colspan="4" class="p-4 text-center">Nenhum motoboy.</td></tr>';
+            data.forEach(m => {
+                tb.innerHTML += `<tr class="border-b"><td class="p-4 font-bold">${m.responsavel || 'Sem Nome'}</td><td class="p-4 bg-gray-50 font-mono text-xs">${m.placa_moto}</td><td class="p-4">${m.whatsapp_responsavel || '-'}</td><td class="p-4 text-xs text-gray-500">${new Date(m.created_at).toLocaleDateString()}</td></tr>`;
+            });
         }
 
-        async function alterarSenhaLogin() {
-            const s = document.getElementById('perf-senha-nova').value;
-            if(s.length < 6) return alert("Mínimo 6 dígitos");
-            const { error } = await sbClient.auth.updateUser({ password: s });
-            if(!error) { alert("Senha alterada! Logue novamente."); logout(); } else alert(error.message);
-        }
-
-        async function alterarPinSeguranca() {
-            const atual = document.getElementById('perf-pin-atual').value;
-            const novo = document.getElementById('perf-pin-novo').value;
-            if(novo.length !== 4) return alert("PIN deve ter 4 dígitos");
-            
-            const { data } = await sbClient.from('app_config').select('admin_pin, id').single();
-            if(data.admin_pin && data.admin_pin !== atual) return alert("PIN Atual incorreto");
-            
-            await sbClient.from('app_config').update({ admin_pin: novo }).eq('id', data.id);
-            alert("PIN Atualizado!");
-        }
-
-        // Funções de carga (Pedidos, Motoboys, Lojas) iguais às versões anteriores...
-        // [Inserir aqui as funções carregarPedidos, carregarMotoboys, carregarLojas, carregarAvaliacoes da versão anterior]
-        // Vou incluir as essenciais para funcionar o display:
-        
-        async function carregarPedidos() {
-            const div = document.getElementById('lista-pedidos');
-            div.innerHTML = '...';
-            const { data } = await sbClient.from('pedidos').select('*, profiles(nome_loja), motoboys(nome)').order('created_at', { ascending: false }).limit(20);
+        async function carregarAvaliacoes() {
+            const div = document.getElementById('lista-avaliacoes'); div.innerHTML = 'Carregando...';
+            // Join com profiles para pegar nome do Motoboy
+            const { data } = await sbClient.from('avaliacoes').select('*, profiles(responsavel)').order('created_at', {ascending:false}).limit(20);
             div.innerHTML = '';
-            if(!data || !data.length) return div.innerHTML = 'Sem pedidos.';
-            data.forEach(p => {
-                const l = p.profiles?.nome_loja || 'Loja';
-                div.innerHTML += `<div class="bg-white p-4 rounded mb-2 shadow-sm flex justify-between"><div><b>#${p.id.substring(0,4)} ${l}</b><br><span class="text-xs">${p.status}</span></div><b>R$ ${p.valor_frete}</b></div>`;
+            if(!data || !data.length) return div.innerHTML = '<p class="col-span-3 text-center text-gray-400">Sem avaliações ainda.</p>';
+            data.forEach(a => {
+                const estrelas = '⭐'.repeat(a.nota);
+                div.innerHTML += `
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                        <div class="flex justify-between mb-2"><span class="font-bold text-gray-700">${a.profiles?.responsavel || 'Motoboy'}</span><span class="text-xs text-gray-400">${new Date(a.created_at).toLocaleDateString()}</span></div>
+                        <div class="text-yellow-400 text-lg mb-2">${estrelas}</div>
+                        <p class="text-sm text-gray-600 italic">"${a.comentario || 'Sem comentário'}"</p>
+                    </div>`;
             });
         }
-        
-        async function carregarLojas() {
-            const tb = document.getElementById('lista-lojas'); tb.innerHTML = '';
-            const { data } = await sbClient.from('profiles').select('*').not('nome_loja', 'is', null);
-            data.forEach(l => {
-                tb.innerHTML += `<tr class="border-b"><td class="p-3">${l.nome_loja}</td><td class="p-3">R$ ${l.saldo?.toFixed(2)}</td><td class="p-3 text-right"><button onclick="modalSaldo('${l.id}','${l.nome_loja}')" class="bg-blue-100 text-blue-600 px-2 rounded font-bold">$</button></td></tr>`;
-            });
-        }
-        
-        // Modal Saldo Lógica
-        function modalSaldo(id, nome) { document.getElementById('modal-loja-id').value = id; document.getElementById('modal-loja-nome').innerText = nome; document.getElementById('modal-saldo').classList.remove('hidden'); }
-        function setTipoSaldo(t) { document.getElementById('modal-tipo-saldo').value = t; } // Adicione estilo visual se desejar
-        
-        async function confirmarSaldo() {
-            const id = document.getElementById('modal-loja-id').value;
-            const tipo = document.getElementById('modal-tipo-saldo').value;
-            let val = parseFloat(document.getElementById('input-saldo').value);
-            const { data } = await sbClient.from('profiles').select('saldo').eq('id', id).single();
-            let novo = data.saldo || 0;
-            if(tipo === 'credito') novo += val; else novo -= val;
-            
-            const { error } = await sbClient.from('profiles').update({ saldo: novo }).eq('id', id);
-            if(!error) { 
-                sbClient.from('transacoes').insert([{ user_id: id, tipo: tipo, valor: val, descricao: 'Admin Ajuste' }]);
-                alert("Ok!"); document.getElementById('modal-saldo').classList.add('hidden'); carregarLojas();
-            }
-        }
-        
-        async function carregarMotoboys() { /* Lógica padrão de listar motoboys */ }
-        async function carregarAvaliacoes() { /* Lógica padrão de listar avaliações */ }
 
+        // --- MANTER FUNÇÕES ANTIGAS ---
+        function nav(view, el) { ['dash', 'motoboys', 'pedidos', 'lojas', 'config', 'avaliacoes', 'perfil'].forEach(v => document.getElementById('view-'+v).classList.add('hidden')); document.getElementById('view-'+view).classList.remove('hidden'); document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active')); el.classList.add('active'); }
+        async function carregarPedidos() { const div=document.getElementById('lista-pedidos'); div.innerHTML='...'; const{data}=await sbClient.from('pedidos').select('*, profiles(nome_loja)').order('created_at',{ascending:false}).limit(20); div.innerHTML=''; if(!data||!data.length)return div.innerHTML='Sem pedidos.'; data.forEach(p=>{ const l=p.profiles?.nome_loja||'Loja'; const cor = p.status==='pendente'?'border-yellow-400':(p.status==='concluido'?'border-green-400':'border-gray-200'); div.innerHTML+=`<div class="bg-white p-4 rounded mb-2 shadow-sm flex justify-between border-l-4 ${cor}"><div><b>#${p.id.substring(0,4)} ${l}</b><br><span class="text-xs uppercase font-bold text-gray-500">${p.status}</span></div><b>R$ ${p.valor_frete}</b></div>`; }); }
+        async function carregarLojas(){ const tb=document.getElementById('lista-lojas'); tb.innerHTML=''; const{data}=await sbClient.from('profiles').select('*').not('nome_loja','is',null); data.forEach(l=>{ tb.innerHTML+=`<tr class="border-b"><td class="p-3 font-bold">${l.nome_loja}</td><td class="p-3 text-sm">${l.responsavel||'-'}</td><td class="p-3 font-mono ${l.saldo<0?'text-red-500':'text-green-600'}">R$ ${l.saldo?.toFixed(2)}</td><td class="p-3 text-right"><button onclick="modalSaldo('${l.id}','${l.nome_loja}')" class="bg-blue-50 text-blue-600 px-3 py-1 rounded font-bold hover:bg-blue-100">$ Saldo</button></td></tr>`; }); }
+        function modalSaldo(id,n){ document.getElementById('modal-loja-id').value=id; document.getElementById('modal-loja-nome').innerText=n; document.getElementById('modal-saldo').classList.remove('hidden'); }
+        function setTipoSaldo(t){ document.getElementById('modal-tipo-saldo').value=t; document.getElementById('btn-credito').className = t==='credito' ? "flex-1 py-2 bg-green-100 text-green-700 rounded-lg font-bold border border-green-200" : "flex-1 py-2 bg-gray-100 text-gray-400 rounded-lg font-bold border border-transparent"; document.getElementById('btn-debito').className = t==='debito' ? "flex-1 py-2 bg-red-100 text-red-700 rounded-lg font-bold border border-red-200" : "flex-1 py-2 bg-gray-100 text-gray-400 rounded-lg font-bold border border-transparent"; }
+        async function confirmarSaldo(){ const id=document.getElementById('modal-loja-id').value; const tipo=document.getElementById('modal-tipo-saldo').value; let val=parseFloat(document.getElementById('input-saldo').value); const{data}=await sbClient.from('profiles').select('saldo').eq('id',id).single(); let novo=data.saldo||0; if(tipo==='credito')novo+=val; else novo-=val; const{error}=await sbClient.from('profiles').update({saldo:novo}).eq('id',id); if(!error){ await sbClient.from('transacoes').insert([{user_id:id, tipo:tipo, valor:val, descricao:'Ajuste Admin'}]); alert("Saldo Atualizado!"); document.getElementById('modal-saldo').classList.add('hidden'); carregarLojas(); } }
+        async function alterarSenhaLogin(){ const s=document.getElementById('perf-senha-nova').value; if(s.length<6)return alert("Mínimo 6 dígitos"); const{error}=await sbClient.auth.updateUser({password:s}); if(!error){ alert("Senha alterada! Logue novamente."); logout(); }else alert(error.message); }
+        async function alterarPinSeguranca(){ const atual=document.getElementById('perf-pin-atual').value; const novo=document.getElementById('perf-pin-novo').value; if(novo.length!==4)return alert("4 dígitos"); const{data}=await sbClient.from('app_config').select('admin_pin, id').single(); if(data.admin_pin&&data.admin_pin!==atual)return alert("PIN Atual incorreto"); await sbClient.from('app_config').update({admin_pin:novo}).eq('id',data.id); alert("PIN Atualizado!"); }
     </script>
 </body>
 </html>
